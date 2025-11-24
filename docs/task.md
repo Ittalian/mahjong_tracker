@@ -1,0 +1,23 @@
+# 麻雀収支管理アプリ開発タスク
+
+- [x] プロジェクトのセットアップ
+    - [x] Flutterプロジェクトの作成 (`mahjong_tracker`)
+    - [x] 必要なパッケージの追加 (`firebase_core`, `cloud_firestore`, `intl` 等)
+- [x] データモデルとサービスの作成
+    - [x] `MahjongResult` モデルクラスの作成
+    - [x] `FirestoreService` クラスの作成 (CRUD操作)
+- [ ] UI実装
+    - [x] メイン（一覧）画面の実装 (`HomeScreen`)
+        - [x] Firestoreからのデータ取得と表示 (`StreamBuilder`)
+        - [x] 追加画面への遷移ボタン (FAB)
+        - [x] 削除確認ダイアログの実装
+    - [x] 編集・追加画面の実装 (`EditScreen`)
+        - [x] 日付選択、金額入力、メモ入力フォーム
+        - [x] 保存処理
+- [x] アプリの起動設定
+    - [x] `main.dart` でのFirebase初期化
+- [x] 動作確認とドキュメント作成
+    - [x] `walkthrough.md` の作成
+- [x] エミュレーター環境セットアップ
+    - [x] `main.dart` のFirebase設定有効化
+    - [x] エミュレーターの確認と起動
