@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../models/mahjong_result.dart';
+import '../models/gamble_record.dart';
 import '../services/firestore_service.dart';
 
 class EditScreen extends StatefulWidget {
-  final MahjongResult? result;
+  final GambleRecord? result;
+  final String category;
 
-  const EditScreen({super.key, this.result});
+  const EditScreen({super.key, this.result, required this.category});
 
   @override
   State<EditScreen> createState() => _EditScreenState();
@@ -56,8 +57,9 @@ class _EditScreenState extends State<EditScreen> {
       final amount = int.tryParse(_amountController.text) ?? 0;
       final memo = _memoController.text;
 
-      final newResult = MahjongResult(
+      final newResult = GambleRecord(
         id: widget.result?.id,
+        category: widget.category,
         date: _selectedDate,
         amount: amount,
         memo: memo,

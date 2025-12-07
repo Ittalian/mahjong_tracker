@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../models/mahjong_result.dart';
+import '../models/gamble_record.dart';
 
 class ResultCard extends StatelessWidget {
-  final MahjongResult result;
+  final GambleRecord result;
   final VoidCallback onTap;
   final VoidCallback onLongPress;
 

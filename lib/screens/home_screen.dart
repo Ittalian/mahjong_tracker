@@ -1,26 +1,42 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../models/mahjong_result.dart';
+import '../models/gamble_record.dart';
 import '../services/firestore_service.dart';
 import '../widgets/result_card.dart';
 import 'edit_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
   final FirestoreService _firestoreService = FirestoreService();
+  int _currentIndex = 0;
 
-  HomeScreen({super.key});
+  final List<Map<String, dynamic>> _categories = [
+    {'id': 'mahjong', 'label': '麻雀', 'icon': Icons.casino},
+    {'id': 'horse_racing', 'label': '競馬', 'icon': Icons.pets},
+    {'id': 'boat_racing', 'label': '競艇', 'icon': Icons.directions_boat},
+    {'id': 'auto_racing', 'label': 'オート', 'icon': Icons.motorcycle},
+    {'id': 'keirin', 'label': '競輪', 'icon': Icons.directions_bike},
+  ];
 
-  void _navigateToEditScreen(BuildContext context, [MahjongResult? result]) {
+  void _navigateToEditScreen(BuildContext context, [GambleRecord? result]) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => EditScreen(result: result),
+        builder: (context) => EditScreen(
+          result: result,
+          category: _categories[_currentIndex]['id'],
+        ),
       ),
     );
   }
 
-  Future<void> _confirmDelete(
-      BuildContext context, MahjongResult result) async {
+  Future<void> _confirmDelete(BuildContext context, GambleRecord result) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -46,12 +62,14 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final currentCategory = _categories[_currentIndex];
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('麻雀収支管理'),
+        title: Text('${currentCategory['label']}収支管理'),
       ),
-      body: StreamBuilder<List<MahjongResult>>(
-        stream: _firestoreService.getResults(),
+      body: StreamBuilder<List<GambleRecord>>(
+        stream: _firestoreService.getResults(currentCategory['id']),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return Center(child: Text('エラーが発生しました: ${snapshot.error}'));
@@ -113,6 +131,21 @@ class HomeScreen extends StatelessWidget {
       floatingActionButton: FloatingActionButton(
         onPressed: () => _navigateToEditScreen(context),
         child: const Icon(Icons.add),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        onTap: (index) {
+          setState(() {
+            _currentIndex = index;
+          });
+        },
+        type: BottomNavigationBarType.fixed,
+        items: _categories.map((category) {
+          return BottomNavigationBarItem(
+            icon: Icon(category['icon']),
+            label: category['label'],
+          );
+        }).toList(),
       ),
     );
   }
