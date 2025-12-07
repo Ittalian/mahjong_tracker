@@ -1,36 +1,150 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../models/gamble_record.dart';
+import '../models/mahjong_result.dart';
+import '../models/horse_racing_result.dart';
+import '../models/boat_racing_result.dart';
+import '../models/auto_racing_result.dart';
+import '../models/keirin_result.dart';
 
 class FirestoreService {
-  final CollectionReference _resultsCollection =
-      FirebaseFirestore.instance.collection('results');
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // 収支データの追加
-  Future<void> addResult(GambleRecord result) async {
-    await _resultsCollection.add(result.toMap());
+  Future<void> addMahjongResult(MahjongResult result) async {
+    await _firestore.collection('mahjong_results').add(result.toMap());
   }
 
-  // 収支データの取得 (Stream)
-  Stream<List<GambleRecord>> getResults(String category) {
-    return _resultsCollection
-        .where('category', isEqualTo: category)
+  Stream<List<MahjongResult>> getMahjongResults() {
+    return _firestore
+        .collection('mahjong_results')
         .orderBy('date', descending: true)
         .snapshots()
         .map((snapshot) {
       return snapshot.docs.map((doc) {
-        return GambleRecord.fromFirestore(doc);
+        return MahjongResult.fromFirestore(doc);
       }).toList();
     });
   }
 
-  // 収支データの更新
-  Future<void> updateResult(GambleRecord result) async {
+  Future<void> updateMahjongResult(MahjongResult result) async {
     if (result.id == null) return;
-    await _resultsCollection.doc(result.id).update(result.toMap());
+    await _firestore
+        .collection('mahjong_results')
+        .doc(result.id)
+        .update(result.toMap());
   }
 
-  // 収支データの削除
-  Future<void> deleteResult(String id) async {
-    await _resultsCollection.doc(id).delete();
+  Future<void> deleteMahjongResult(String id) async {
+    await _firestore.collection('mahjong_results').doc(id).delete();
+  }
+
+  Future<void> addHorseRacingResult(HorseRacingResult result) async {
+    await _firestore.collection('horse_racing_results').add(result.toMap());
+  }
+
+  Stream<List<HorseRacingResult>> getHorseRacingResults() {
+    return _firestore
+        .collection('horse_racing_results')
+        .orderBy('date', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        return HorseRacingResult.fromFirestore(doc);
+      }).toList();
+    });
+  }
+
+  Future<void> updateHorseRacingResult(HorseRacingResult result) async {
+    if (result.id == null) return;
+    await _firestore
+        .collection('horse_racing_results')
+        .doc(result.id)
+        .update(result.toMap());
+  }
+
+  Future<void> deleteHorseRacingResult(String id) async {
+    await _firestore.collection('horse_racing_results').doc(id).delete();
+  }
+
+  Future<void> addBoatRacingResult(BoatRacingResult result) async {
+    await _firestore.collection('boat_racing_results').add(result.toMap());
+  }
+
+  Stream<List<BoatRacingResult>> getBoatRacingResults() {
+    return _firestore
+        .collection('boat_racing_results')
+        .orderBy('date', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        return BoatRacingResult.fromFirestore(doc);
+      }).toList();
+    });
+  }
+
+  Future<void> updateBoatRacingResult(BoatRacingResult result) async {
+    if (result.id == null) return;
+    await _firestore
+        .collection('boat_racing_results')
+        .doc(result.id)
+        .update(result.toMap());
+  }
+
+  Future<void> deleteBoatRacingResult(String id) async {
+    await _firestore.collection('boat_racing_results').doc(id).delete();
+  }
+
+  Future<void> addAutoRacingResult(AutoRacingResult result) async {
+    await _firestore.collection('auto_racing_results').add(result.toMap());
+  }
+
+  Stream<List<AutoRacingResult>> getAutoRacingResults() {
+    return _firestore
+        .collection('auto_racing_results')
+        .orderBy('date', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        return AutoRacingResult.fromFirestore(doc);
+      }).toList();
+    });
+  }
+
+  Future<void> updateAutoRacingResult(AutoRacingResult result) async {
+    if (result.id == null) return;
+    await _firestore
+        .collection('auto_racing_results')
+        .doc(result.id)
+        .update(result.toMap());
+  }
+
+  Future<void> deleteAutoRacingResult(String id) async {
+    await _firestore.collection('auto_racing_results').doc(id).delete();
+  }
+
+  Future<void> addKeirinResult(KeirinResult result) async {
+    await _firestore.collection('keirin_results').add(result.toMap());
+  }
+
+  Stream<List<KeirinResult>> getKeirinResults() {
+    return _firestore
+        .collection('keirin_results')
+        .orderBy('date', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        return KeirinResult.fromFirestore(doc);
+      }).toList();
+    });
+  }
+
+  Future<void> updateKeirinResult(KeirinResult result) async {
+    if (result.id == null) return;
+    await _firestore
+        .collection('keirin_results')
+        .doc(result.id)
+        .update(result.toMap());
+  }
+
+  Future<void> deleteKeirinResult(String id) async {
+    await _firestore.collection('keirin_results').doc(id).delete();
   }
 }

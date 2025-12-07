@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../models/gamble_record.dart';
+import '../models/horse_racing_result.dart';
+import '../models/boat_racing_result.dart';
+import '../models/auto_racing_result.dart';
+import '../models/keirin_result.dart';
 
 class ResultCard extends StatelessWidget {
-  final GambleRecord result;
+  final dynamic result;
   final VoidCallback onTap;
   final VoidCallback onLongPress;
 
@@ -23,6 +26,17 @@ class ResultCard extends StatelessWidget {
     final amountText =
         '${isPositive ? '+' : ''}${currencyFormatter.format(result.amount)}';
 
+    String? betType;
+    if (result is HorseRacingResult) {
+      betType = result.betType;
+    } else if (result is BoatRacingResult) {
+      betType = result.betType;
+    } else if (result is AutoRacingResult) {
+      betType = result.betType;
+    } else if (result is KeirinResult) {
+      betType = result.betType;
+    }
+
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: InkWell(
@@ -41,6 +55,16 @@ class ResultCard extends StatelessWidget {
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
                   const SizedBox(height: 4),
+                  if (betType != null && betType.isNotEmpty) ...[
+                    Text(
+                      betType,
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodyMedium
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 2),
+                  ],
                   if (result.memo.isNotEmpty)
                     Text(
                       result.memo,

@@ -17,10 +17,7 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'DefaultFirebaseOptions have not been configured for web - '
-        'you can reconfigure this by running the FlutterFire CLI again.',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -28,15 +25,9 @@ class DefaultFirebaseOptions {
       case TargetPlatform.iOS:
         return ios;
       case TargetPlatform.macOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for macos - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return macos;
       case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return windows;
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -50,19 +41,47 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyA6Nl8SF2XimR96RoJLzgelnyK-p0kSB0I',
-    appId: '1:988324889158:android:2cb530d97450d858224047',
-    messagingSenderId: '988324889158',
-    projectId: 'mahjong-tracker-fcd7e',
-    storageBucket: 'mahjong-tracker-fcd7e.firebasestorage.app',
+    apiKey: 'AIzaSyD70MAhPZVqwHKNX-NWB0hA6oPrVIpSiVw',
+    appId: '1:338057051912:android:493ec3563f2cf216ef36bd',
+    messagingSenderId: '338057051912',
+    projectId: 'gamble-tracker-new-001',
+    storageBucket: 'gamble-tracker-new-001.firebasestorage.app',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyB8zSHMkYXk-s5FPuw7WzVjRsGi5s9EZRM',
-    appId: '1:988324889158:ios:2bb7cb8c076f2ec7224047',
-    messagingSenderId: '988324889158',
-    projectId: 'mahjong-tracker-fcd7e',
-    storageBucket: 'mahjong-tracker-fcd7e.firebasestorage.app',
+    apiKey: 'AIzaSyDbC5IJsqLJUx1nnRNwmEUPZJ9x58N4M-c',
+    appId: '1:338057051912:ios:9daff3a1c93e8d38ef36bd',
+    messagingSenderId: '338057051912',
+    projectId: 'gamble-tracker-new-001',
+    storageBucket: 'gamble-tracker-new-001.firebasestorage.app',
     iosBundleId: 'com.example.mahjongTracker',
   );
+
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyDyVdm_H-KFwAQ60VUMy8yLUfh1-Av-HFY',
+    appId: '1:338057051912:web:b5d59b6a139785bcef36bd',
+    messagingSenderId: '338057051912',
+    projectId: 'gamble-tracker-new-001',
+    authDomain: 'gamble-tracker-new-001.firebaseapp.com',
+    storageBucket: 'gamble-tracker-new-001.firebasestorage.app',
+  );
+
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'AIzaSyDbC5IJsqLJUx1nnRNwmEUPZJ9x58N4M-c',
+    appId: '1:338057051912:ios:9daff3a1c93e8d38ef36bd',
+    messagingSenderId: '338057051912',
+    projectId: 'gamble-tracker-new-001',
+    storageBucket: 'gamble-tracker-new-001.firebasestorage.app',
+    iosBundleId: 'com.example.mahjongTracker',
+  );
+
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyDyVdm_H-KFwAQ60VUMy8yLUfh1-Av-HFY',
+    appId: '1:338057051912:web:e97bfd93b858b5f7ef36bd',
+    messagingSenderId: '338057051912',
+    projectId: 'gamble-tracker-new-001',
+    authDomain: 'gamble-tracker-new-001.firebaseapp.com',
+    storageBucket: 'gamble-tracker-new-001.firebasestorage.app',
+  );
+
 }

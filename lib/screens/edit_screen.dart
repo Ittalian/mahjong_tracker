@@ -1,13 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../models/gamble_record.dart';
+import '../models/mahjong_result.dart';
 import '../services/firestore_service.dart';
+import '../models/horse_racing_result.dart';
+import '../models/boat_racing_result.dart';
+import '../models/auto_racing_result.dart';
+import '../models/keirin_result.dart';
 
 class EditScreen extends StatefulWidget {
-  final GambleRecord? result;
-  final String category;
+  final dynamic result;
+  final String categoryType;
 
-  const EditScreen({super.key, this.result, required this.category});
+  const EditScreen({
+    super.key,
+    this.result,
+    required this.categoryType,
+  });
 
   @override
   State<EditScreen> createState() => _EditScreenState();
@@ -20,6 +28,7 @@ class _EditScreenState extends State<EditScreen> {
   late DateTime _selectedDate;
   late TextEditingController _amountController;
   late TextEditingController _memoController;
+  late TextEditingController _betTypeController;
 
   @override
   void initState() {
@@ -29,12 +38,27 @@ class _EditScreenState extends State<EditScreen> {
       text: widget.result?.amount.toString() ?? '',
     );
     _memoController = TextEditingController(text: widget.result?.memo ?? '');
+
+    String initialBetType = '';
+    if (widget.result != null) {
+      if (widget.result is HorseRacingResult) {
+        initialBetType = (widget.result as HorseRacingResult).betType;
+      } else if (widget.result is BoatRacingResult) {
+        initialBetType = (widget.result as BoatRacingResult).betType;
+      } else if (widget.result is AutoRacingResult) {
+        initialBetType = (widget.result as AutoRacingResult).betType;
+      } else if (widget.result is KeirinResult) {
+        initialBetType = (widget.result as KeirinResult).betType;
+      }
+    }
+    _betTypeController = TextEditingController(text: initialBetType);
   }
 
   @override
   void dispose() {
     _amountController.dispose();
     _memoController.dispose();
+    _betTypeController.dispose();
     super.dispose();
   }
 
@@ -56,22 +80,90 @@ class _EditScreenState extends State<EditScreen> {
     if (_formKey.currentState!.validate()) {
       final amount = int.tryParse(_amountController.text) ?? 0;
       final memo = _memoController.text;
-
-      final newResult = GambleRecord(
-        id: widget.result?.id,
-        category: widget.category,
-        date: _selectedDate,
-        amount: amount,
-        memo: memo,
-        createdAt: widget.result?.createdAt ?? DateTime.now(),
-      );
+      final betType = _betTypeController.text;
 
       try {
-        if (widget.result == null) {
-          await _firestoreService.addResult(newResult);
-        } else {
-          await _firestoreService.updateResult(newResult);
+        switch (widget.categoryType) {
+          case 'mahjong':
+            final newResult = MahjongResult(
+              id: widget.result?.id,
+              date: _selectedDate,
+              amount: amount,
+              memo: memo,
+              createdAt: widget.result?.createdAt ?? DateTime.now(),
+            );
+            if (widget.result == null) {
+              await _firestoreService.addMahjongResult(newResult);
+            } else {
+              await _firestoreService.updateMahjongResult(newResult);
+            }
+            break;
+
+          case 'horse_racing':
+            final newResult = HorseRacingResult(
+              id: widget.result?.id,
+              date: _selectedDate,
+              amount: amount,
+              betType: betType,
+              memo: memo,
+              createdAt: widget.result?.createdAt ?? DateTime.now(),
+            );
+            if (widget.result == null) {
+              await _firestoreService.addHorseRacingResult(newResult);
+            } else {
+              await _firestoreService.updateHorseRacingResult(newResult);
+            }
+            break;
+
+          case 'boat_racing':
+            final newResult = BoatRacingResult(
+              id: widget.result?.id,
+              date: _selectedDate,
+              amount: amount,
+              betType: betType,
+              memo: memo,
+              createdAt: widget.result?.createdAt ?? DateTime.now(),
+            );
+            if (widget.result == null) {
+              await _firestoreService.addBoatRacingResult(newResult);
+            } else {
+              await _firestoreService.updateBoatRacingResult(newResult);
+            }
+            break;
+
+          case 'auto_racing':
+            final newResult = AutoRacingResult(
+              id: widget.result?.id,
+              date: _selectedDate,
+              amount: amount,
+              betType: betType,
+              memo: memo,
+              createdAt: widget.result?.createdAt ?? DateTime.now(),
+            );
+            if (widget.result == null) {
+              await _firestoreService.addAutoRacingResult(newResult);
+            } else {
+              await _firestoreService.updateAutoRacingResult(newResult);
+            }
+            break;
+
+          case 'keirin':
+            final newResult = KeirinResult(
+              id: widget.result?.id,
+              date: _selectedDate,
+              amount: amount,
+              betType: betType,
+              memo: memo,
+              createdAt: widget.result?.createdAt ?? DateTime.now(),
+            );
+            if (widget.result == null) {
+              await _firestoreService.addKeirinResult(newResult);
+            } else {
+              await _firestoreService.updateKeirinResult(newResult);
+            }
+            break;
         }
+
         if (mounted) {
           Navigator.pop(context);
         }
@@ -88,6 +180,8 @@ class _EditScreenState extends State<EditScreen> {
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.result != null;
+    final isRacing = widget.categoryType != 'mahjong';
+
     return Scaffold(
       appBar: AppBar(
         title: Text(isEditing ? '収支編集' : '収支追加'),
@@ -123,6 +217,15 @@ class _EditScreenState extends State<EditScreen> {
                   return null;
                 },
               ),
+              if (isRacing) ...[
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: _betTypeController,
+                  decoration: const InputDecoration(
+                    labelText: '賭け方 (単勝、3連単など)',
+                  ),
+                ),
+              ],
               const SizedBox(height: 16),
               TextFormField(
                 controller: _memoController,

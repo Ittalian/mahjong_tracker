@@ -1,13 +1,13 @@
 {
   "project_info": {
-    "project_number": "988324889158",
-    "project_id": "mahjong-tracker-fcd7e",
-    "storage_bucket": "mahjong-tracker-fcd7e.firebasestorage.app"
+    "project_number": "338057051912",
+    "project_id": "gamble-tracker-new-001",
+    "storage_bucket": "gamble-tracker-new-001.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:988324889158:android:2cb530d97450d858224047",
+        "mobilesdk_app_id": "1:338057051912:android:493ec3563f2cf216ef36bd",
         "android_client_info": {
           "package_name": "com.example.mahjong_tracker"
         }
@@ -15,7 +15,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyA6Nl8SF2XimR96RoJLzgelnyK-p0kSB0I"
+          "current_key": "AIzaSyD70MAhPZVqwHKNX-NWB0hA6oPrVIpSiVw"
         }
       ],
       "services": {

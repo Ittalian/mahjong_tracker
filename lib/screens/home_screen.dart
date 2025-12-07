@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../models/gamble_record.dart';
 import '../services/firestore_service.dart';
 import '../widgets/result_card.dart';
 import 'edit_screen.dart';
+import 'summary_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -15,28 +15,78 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final FirestoreService _firestoreService = FirestoreService();
   int _currentIndex = 0;
+  final PageController _pageController = PageController();
 
   final List<Map<String, dynamic>> _categories = [
-    {'id': 'mahjong', 'label': '麻雀', 'icon': Icons.casino},
-    {'id': 'horse_racing', 'label': '競馬', 'icon': Icons.pets},
-    {'id': 'boat_racing', 'label': '競艇', 'icon': Icons.directions_boat},
-    {'id': 'auto_racing', 'label': 'オート', 'icon': Icons.motorcycle},
-    {'id': 'keirin', 'label': '競輪', 'icon': Icons.directions_bike},
+    {'id': 'mahjong', 'label': '麻雀', 'icon': Icons.casino, 'type': 'mahjong'},
+    {
+      'id': 'horse_racing',
+      'label': '競馬',
+      'icon': Icons.pets,
+      'type': 'horse_racing'
+    },
+    {
+      'id': 'boat_racing',
+      'label': 'ボート',
+      'icon': Icons.directions_boat,
+      'type': 'boat_racing'
+    },
+    {
+      'id': 'auto_racing',
+      'label': 'オート',
+      'icon': Icons.motorcycle,
+      'type': 'auto_racing'
+    },
+    {
+      'id': 'keirin',
+      'label': '競輪',
+      'icon': Icons.directions_bike,
+      'type': 'keirin'
+    },
   ];
 
-  void _navigateToEditScreen(BuildContext context, [GambleRecord? result]) {
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _onPageChanged(int index) {
+    setState(() {
+      _currentIndex = index;
+    });
+  }
+
+  void _onItemTapped(int index) {
+    _pageController.jumpToPage(index);
+  }
+
+  void _navigateToEditScreen(BuildContext context, [dynamic result]) {
+    // If on summary page (index == _categories.length), show a dialog or default to mahjong?
+    // User probably wants to add a record. Let's make the FAB available on summary page too?
+    // User didn't specify. Assuming FAB should be hidden on Summary page or default to first category.
+    // Let's hide FAB on Summary page for now, or just let users add to "Mahjong" by default?
+    // Better UX: Show a dialog to choose category if on summary page, OR just hide FAB.
+    // Given the request complexity, let's keep it simple: Access to add is from category pages.
+    // If FAB is pressed on summary page, maybe show ActionSheet?
+    // For now, I'll limit FAB to category pages.
+
+    if (_currentIndex >= _categories.length)
+      return; // Should not happen if FAB hidden
+
+    final currentCategory = _categories[_currentIndex];
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => EditScreen(
           result: result,
-          category: _categories[_currentIndex]['id'],
+          categoryType: currentCategory['type'],
         ),
       ),
     );
   }
 
-  Future<void> _confirmDelete(BuildContext context, GambleRecord result) async {
+  Future<void> _confirmDelete(BuildContext context, dynamic result) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -56,96 +106,148 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     if (confirmed == true && result.id != null) {
-      await _firestoreService.deleteResult(result.id!);
+      // Find which category this result belongs to.
+      // Since we are deleting from the list view of a specific category, we know the index.
+      // But _confirmDelete is called from ResultCard.
+
+      final currentCategory = _categories[_currentIndex];
+
+      switch (currentCategory['type']) {
+        case 'mahjong':
+          await _firestoreService.deleteMahjongResult(result.id!);
+          break;
+        case 'horse_racing':
+          await _firestoreService.deleteHorseRacingResult(result.id!);
+          break;
+        case 'boat_racing':
+          await _firestoreService.deleteBoatRacingResult(result.id!);
+          break;
+        case 'auto_racing':
+          await _firestoreService.deleteAutoRacingResult(result.id!);
+          break;
+        case 'keirin':
+          await _firestoreService.deleteKeirinResult(result.id!);
+          break;
+      }
     }
+  }
+
+  Stream<List<dynamic>> _getStreamForCategory(String type) {
+    switch (type) {
+      case 'mahjong':
+        return _firestoreService.getMahjongResults();
+      case 'horse_racing':
+        return _firestoreService.getHorseRacingResults();
+      case 'boat_racing':
+        return _firestoreService.getBoatRacingResults();
+      case 'auto_racing':
+        return _firestoreService.getAutoRacingResults();
+      case 'keirin':
+        return _firestoreService.getKeirinResults();
+      default:
+        return const Stream.empty();
+    }
+  }
+
+  Widget _buildCategoryPage(Map<String, dynamic> category) {
+    return StreamBuilder<List<dynamic>>(
+      stream: _getStreamForCategory(category['type']),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Center(child: Text('エラーが発生しました: ${snapshot.error}'));
+        }
+
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final results = snapshot.data ?? [];
+        final int totalAmount =
+            results.fold<int>(0, (sum, item) => sum + (item.amount as int));
+        final currencyFormatter = NumberFormat("#,##0", "ja_JP");
+
+        return Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              color: Theme.of(context).primaryColor.withOpacity(0.1),
+              width: double.infinity,
+              child: Column(
+                children: [
+                  Text(
+                    '${category['label']} 合計収支',
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '${totalAmount >= 0 ? '+' : ''}${currencyFormatter.format(totalAmount)}',
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.bold,
+                      color: totalAmount >= 0 ? Colors.green : Colors.red,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: results.isEmpty
+                  ? const Center(child: Text('データがありません'))
+                  : ListView.builder(
+                      itemCount: results.length,
+                      itemBuilder: (context, index) {
+                        final result = results[index];
+                        return ResultCard(
+                          result: result,
+                          onTap: () => _navigateToEditScreen(context, result),
+                          onLongPress: () => _confirmDelete(context, result),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final currentCategory = _categories[_currentIndex];
+    // Navigation items including Summary
+    final navItems = [
+      ..._categories.map((category) {
+        return BottomNavigationBarItem(
+          icon: Icon(category['icon']),
+          label: category['label'],
+        );
+      }),
+      const BottomNavigationBarItem(
+        icon: Icon(Icons.summarize),
+        label: '合計',
+      ),
+    ];
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('${currentCategory['label']}収支管理'),
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: _onPageChanged,
+        children: [
+          ..._categories.map((category) => _buildCategoryPage(category)),
+          const SummaryScreen(),
+        ],
       ),
-      body: StreamBuilder<List<GambleRecord>>(
-        stream: _firestoreService.getResults(currentCategory['id']),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Center(child: Text('エラーが発生しました: ${snapshot.error}'));
-          }
-
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          final results = snapshot.data ?? [];
-          final totalAmount =
-              results.fold<int>(0, (sum, item) => sum + item.amount);
-          final currencyFormatter = NumberFormat("#,##0", "ja_JP");
-
-          return Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(24),
-                color: Theme.of(context).primaryColor.withOpacity(0.1),
-                width: double.infinity,
-                child: Column(
-                  children: [
-                    const Text(
-                      '合計収支',
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '${totalAmount >= 0 ? '+' : ''}${currencyFormatter.format(totalAmount)}',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.bold,
-                        color: totalAmount >= 0 ? Colors.green : Colors.red,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: results.isEmpty
-                    ? const Center(child: Text('データがありません'))
-                    : ListView.builder(
-                        itemCount: results.length,
-                        itemBuilder: (context, index) {
-                          final result = results[index];
-                          return ResultCard(
-                            result: result,
-                            onTap: () => _navigateToEditScreen(context, result),
-                            onLongPress: () => _confirmDelete(context, result),
-                          );
-                        },
-                      ),
-              ),
-            ],
-          );
-        },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _navigateToEditScreen(context),
-        child: const Icon(Icons.add),
-      ),
+      floatingActionButton: _currentIndex < _categories.length
+          ? FloatingActionButton(
+              onPressed: () => _navigateToEditScreen(context),
+              child: const Icon(Icons.add),
+            )
+          : null, // Hide FAB on Summary page
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
+        onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed,
-        items: _categories.map((category) {
-          return BottomNavigationBarItem(
-            icon: Icon(category['icon']),
-            label: category['label'],
-          );
-        }).toList(),
+        items: navItems,
       ),
     );
   }
