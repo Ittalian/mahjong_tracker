@@ -18,28 +18,38 @@ class _HomeScreenState extends State<HomeScreen> {
   final PageController _pageController = PageController();
 
   final List<Map<String, dynamic>> _categories = [
-    {'id': 'mahjong', 'label': '麻雀', 'icon': Icons.casino, 'type': 'mahjong'},
+    {
+      'id': 'mahjong',
+      'label': '麻雀',
+      'display_name': '麻雀',
+      'icon': Icons.casino,
+      'type': 'mahjong'
+    },
     {
       'id': 'horse_racing',
       'label': '競馬',
+      'display_name': '競馬',
       'icon': Icons.pets,
       'type': 'horse_racing'
     },
     {
       'id': 'boat_racing',
-      'label': 'ボート',
+      'label': '競艇',
+      'display_name': 'ボートレース',
       'icon': Icons.directions_boat,
       'type': 'boat_racing'
     },
     {
       'id': 'auto_racing',
       'label': 'オート',
+      'display_name': 'オートレース',
       'icon': Icons.motorcycle,
       'type': 'auto_racing'
     },
     {
       'id': 'keirin',
       'label': '競輪',
+      'display_name': '競輪',
       'icon': Icons.directions_bike,
       'type': 'keirin'
     },
@@ -62,17 +72,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _navigateToEditScreen(BuildContext context, [dynamic result]) {
-    // If on summary page (index == _categories.length), show a dialog or default to mahjong?
-    // User probably wants to add a record. Let's make the FAB available on summary page too?
-    // User didn't specify. Assuming FAB should be hidden on Summary page or default to first category.
-    // Let's hide FAB on Summary page for now, or just let users add to "Mahjong" by default?
-    // Better UX: Show a dialog to choose category if on summary page, OR just hide FAB.
-    // Given the request complexity, let's keep it simple: Access to add is from category pages.
-    // If FAB is pressed on summary page, maybe show ActionSheet?
-    // For now, I'll limit FAB to category pages.
-
-    if (_currentIndex >= _categories.length)
-      return; // Should not happen if FAB hidden
+    if (_currentIndex >= _categories.length) {
+      return;
+    }
 
     final currentCategory = _categories[_currentIndex];
     Navigator.push(
@@ -106,10 +108,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     if (confirmed == true && result.id != null) {
-      // Find which category this result belongs to.
-      // Since we are deleting from the list view of a specific category, we know the index.
-      // But _confirmDelete is called from ResultCard.
-
       final currentCategory = _categories[_currentIndex];
 
       switch (currentCategory['type']) {
@@ -175,7 +173,7 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 children: [
                   Text(
-                    '${category['label']} 合計収支',
+                    '${category['display_name']} 合計収支',
                     style: const TextStyle(
                         fontSize: 16, fontWeight: FontWeight.bold),
                   ),
@@ -214,7 +212,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Navigation items including Summary
     final navItems = [
       ..._categories.map((category) {
         return BottomNavigationBarItem(
@@ -242,7 +239,7 @@ class _HomeScreenState extends State<HomeScreen> {
               onPressed: () => _navigateToEditScreen(context),
               child: const Icon(Icons.add),
             )
-          : null, // Hide FAB on Summary page
+          : null,
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: _onItemTapped,

@@ -52,8 +52,8 @@ class SummaryScreen extends StatelessWidget {
         final categories = [
           {'label': '麻雀', 'total': mahjongTotal, 'icon': Icons.casino},
           {'label': '競馬', 'total': horseTotal, 'icon': Icons.pets},
-          {'label': 'ボート', 'total': boatTotal, 'icon': Icons.directions_boat},
-          {'label': 'オート', 'total': autoTotal, 'icon': Icons.motorcycle},
+          {'label': 'ボートレース', 'total': boatTotal, 'icon': Icons.directions_boat},
+          {'label': 'オートレース', 'total': autoTotal, 'icon': Icons.motorcycle},
           {'label': '競輪', 'total': keirinTotal, 'icon': Icons.directions_bike},
         ];
 
