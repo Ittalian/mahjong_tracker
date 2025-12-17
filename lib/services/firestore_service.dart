@@ -4,6 +4,7 @@ import '../models/horse_racing_result.dart';
 import '../models/boat_racing_result.dart';
 import '../models/auto_racing_result.dart';
 import '../models/keirin_result.dart';
+import '../models/pachinko_result.dart';
 
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -146,5 +147,33 @@ class FirestoreService {
 
   Future<void> deleteKeirinResult(String id) async {
     await _firestore.collection('keirin_results').doc(id).delete();
+  }
+
+  Future<void> addPachinkoResult(PachinkoResult result) async {
+    await _firestore.collection('pachinko_results').add(result.toMap());
+  }
+
+  Stream<List<PachinkoResult>> getPachinkoResults() {
+    return _firestore
+        .collection('pachinko_results')
+        .orderBy('date', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs.map((doc) {
+        return PachinkoResult.fromFirestore(doc);
+      }).toList();
+    });
+  }
+
+  Future<void> updatePachinkoResult(PachinkoResult result) async {
+    if (result.id == null) return;
+    await _firestore
+        .collection('pachinko_results')
+        .doc(result.id)
+        .update(result.toMap());
+  }
+
+  Future<void> deletePachinkoResult(String id) async {
+    await _firestore.collection('pachinko_results').doc(id).delete();
   }
 }

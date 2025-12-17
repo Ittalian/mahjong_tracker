@@ -53,6 +53,13 @@ class _HomeScreenState extends State<HomeScreen> {
       'icon': Icons.directions_bike,
       'type': 'keirin'
     },
+    {
+      'id': 'pachinko',
+      'label': 'パチンコ',
+      'display_name': 'パチンコ',
+      'icon': Icons.videogame_asset,
+      'type': 'pachinko'
+    },
   ];
 
   @override
@@ -126,6 +133,9 @@ class _HomeScreenState extends State<HomeScreen> {
         case 'keirin':
           await _firestoreService.deleteKeirinResult(result.id!);
           break;
+        case 'pachinko':
+          await _firestoreService.deletePachinkoResult(result.id!);
+          break;
       }
     }
   }
@@ -142,6 +152,8 @@ class _HomeScreenState extends State<HomeScreen> {
         return _firestoreService.getAutoRacingResults();
       case 'keirin':
         return _firestoreService.getKeirinResults();
+      case 'pachinko':
+        return _firestoreService.getPachinkoResults();
       default:
         return const Stream.empty();
     }
@@ -237,7 +249,8 @@ class _HomeScreenState extends State<HomeScreen> {
       floatingActionButton: _currentIndex < _categories.length
           ? FloatingActionButton(
               onPressed: () => _navigateToEditScreen(context),
-              child: const Icon(Icons.add),
+              tooltip: '収支を追加',
+              child: Icon(_categories[_currentIndex]['icon']),
             )
           : null,
       bottomNavigationBar: BottomNavigationBar(

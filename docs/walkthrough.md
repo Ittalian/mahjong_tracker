@@ -66,7 +66,7 @@ FlutterアプリとFirebaseを連携させるために、`flutterfire_cli` を�
 ```dart
 // lib/main.dart
 
-import 'firebase_options.dart'; // コメントアウトを解除
+import '../initialize project/firebase_options.dart'; // コメントアウトを解除
 
 // ...
 

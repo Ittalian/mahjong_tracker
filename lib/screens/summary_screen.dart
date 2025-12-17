@@ -21,6 +21,7 @@ class SummaryScreen extends StatelessWidget {
     final boatStream = _getTotal(firestoreService.getBoatRacingResults());
     final autoStream = _getTotal(firestoreService.getAutoRacingResults());
     final keirinStream = _getTotal(firestoreService.getKeirinResults());
+    final pachinkoStream = _getTotal(firestoreService.getPachinkoResults());
 
     return StreamBuilder<List<int>>(
       stream: CombineLatestStream.list([
@@ -29,6 +30,7 @@ class SummaryScreen extends StatelessWidget {
         boatStream,
         autoStream,
         keirinStream,
+        pachinkoStream,
       ]),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
@@ -45,16 +47,46 @@ class SummaryScreen extends StatelessWidget {
         final boatTotal = totals[2];
         final autoTotal = totals[3];
         final keirinTotal = totals[4];
+        final pachinkoTotal = totals[5];
 
-        final grandTotal =
-            mahjongTotal + horseTotal + boatTotal + autoTotal + keirinTotal;
+        final grandTotal = mahjongTotal +
+            horseTotal +
+            boatTotal +
+            autoTotal +
+            keirinTotal +
+            pachinkoTotal;
 
         final categories = [
-          {'label': '麻雀', 'total': mahjongTotal, 'icon': Icons.casino},
-          {'label': '競馬', 'total': horseTotal, 'icon': Icons.pets},
-          {'label': 'ボートレース', 'total': boatTotal, 'icon': Icons.directions_boat},
-          {'label': 'オートレース', 'total': autoTotal, 'icon': Icons.motorcycle},
-          {'label': '競輪', 'total': keirinTotal, 'icon': Icons.directions_bike},
+          {
+            'label': '麻雀',
+            'total': mahjongTotal,
+            'icon': Icons.casino,
+          },
+          {
+            'label': '競馬',
+            'total': horseTotal,
+            'icon': Icons.pets,
+          },
+          {
+            'label': 'ボートレース',
+            'total': boatTotal,
+            'icon': Icons.directions_boat,
+          },
+          {
+            'label': 'オートレース',
+            'total': autoTotal,
+            'icon': Icons.motorcycle,
+          },
+          {
+            'label': '競輪',
+            'total': keirinTotal,
+            'icon': Icons.directions_bike,
+          },
+          {
+            'label': 'パチンコ',
+            'total': pachinkoTotal,
+            'icon': Icons.videogame_asset,
+          },
         ];
 
         return Column(

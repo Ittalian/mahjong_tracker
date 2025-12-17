@@ -6,6 +6,7 @@ import '../models/horse_racing_result.dart';
 import '../models/boat_racing_result.dart';
 import '../models/auto_racing_result.dart';
 import '../models/keirin_result.dart';
+import '../models/pachinko_result.dart';
 
 class EditScreen extends StatefulWidget {
   final dynamic result;
@@ -162,6 +163,21 @@ class _EditScreenState extends State<EditScreen> {
               await _firestoreService.updateKeirinResult(newResult);
             }
             break;
+
+          case 'pachinko':
+            final newResult = PachinkoResult(
+              id: widget.result?.id,
+              date: _selectedDate,
+              amount: amount,
+              memo: memo,
+              createdAt: widget.result?.createdAt ?? DateTime.now(),
+            );
+            if (widget.result == null) {
+              await _firestoreService.addPachinkoResult(newResult);
+            } else {
+              await _firestoreService.updatePachinkoResult(newResult);
+            }
+            break;
         }
 
         if (mounted) {
@@ -180,7 +196,8 @@ class _EditScreenState extends State<EditScreen> {
   @override
   Widget build(BuildContext context) {
     final isEditing = widget.result != null;
-    final isRacing = widget.categoryType != 'mahjong';
+    final isRacing =
+        widget.categoryType != 'mahjong' && widget.categoryType != 'pachinko';
 
     return Scaffold(
       appBar: AppBar(
