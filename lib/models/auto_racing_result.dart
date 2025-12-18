@@ -1,6 +1,16 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AutoRacingResult {
+  static const List<String> betTypes = [
+    '単勝',
+    '複勝',
+    '2連単',
+    '2連複',
+    '3連単',
+    '3連複',
+    'ワイド',
+  ];
+
   final String? id;
   final DateTime date;
   final int amount;

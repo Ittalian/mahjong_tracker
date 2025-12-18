@@ -1,6 +1,15 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class BoatRacingResult {
+  static const List<String> betTypes = [
+    '単勝',
+    '2連複',
+    '2連単',
+    '3連複',
+    '3連単',
+    '拡連複',
+  ];
+
   final String? id;
   final DateTime date;
   final int amount;

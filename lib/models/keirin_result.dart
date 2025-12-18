@@ -1,6 +1,17 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class KeirinResult {
+  static const List<String> betTypes = [
+    '単勝',
+    '2車複',
+    '2車単',
+    '3連複',
+    '3連単',
+    '2枠単',
+    '2枠複',
+    'ワイド',
+  ];
+
   final String? id;
   final DateTime date;
   final int amount;

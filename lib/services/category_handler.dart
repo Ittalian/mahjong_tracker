@@ -9,6 +9,13 @@ typedef CreateResultFunction = dynamic Function({
   String? betType,
   required String memo,
   required DateTime createdAt,
+  String? type,
+  String? umaRate,
+  String? priceRate,
+  int? chipRate,
+  List<String>? member,
+  String? place,
+  String? machine,
 });
 
 class CategoryHandler {

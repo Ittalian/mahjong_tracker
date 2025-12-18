@@ -1,6 +1,17 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class HorseRacingResult {
+  static const List<String> betTypes = [
+    '単勝',
+    '複勝',
+    '馬単',
+    '馬連',
+    '3連単',
+    '3連複',
+    '枠連',
+    'ワイド',
+  ];
+
   final String? id;
   final DateTime date;
   final int amount;
