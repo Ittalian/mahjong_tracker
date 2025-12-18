@@ -233,7 +233,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         return ResultCard(
                           result: result,
                           onTap: () => _navigateToEditScreen(context, result),
-                          onLongPress: () => _confirmDelete(context, result),
+                          onDelete: () => _confirmDelete(context, result),
                         );
                       },
                     ),
@@ -272,7 +272,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ? FloatingActionButton(
               onPressed: () => _navigateToEditScreen(context),
               tooltip: '収支を追加',
-              child: Icon(_categories[_currentIndex]['icon']),
+              child: const Icon(Icons.add),
             )
           : null,
       bottomNavigationBar: BottomNavigationBar(

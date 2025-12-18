@@ -8,13 +8,13 @@ import '../models/keirin_result.dart';
 class ResultCard extends StatelessWidget {
   final dynamic result;
   final VoidCallback onTap;
-  final VoidCallback onLongPress;
+  final VoidCallback onDelete;
 
   const ResultCard({
     super.key,
     required this.result,
     required this.onTap,
-    required this.onLongPress,
+    required this.onDelete,
   });
 
   @override
@@ -41,43 +41,54 @@ class ResultCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: InkWell(
         onTap: onTap,
-        onLongPress: onLongPress,
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      formattedDate,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: 4),
+                    if (betType != null && betType.isNotEmpty) ...[
+                      Text(
+                        betType,
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 2),
+                    ],
+                    if (result.memo.isNotEmpty)
+                      Text(
+                        result.memo,
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                  ],
+                ),
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    formattedDate,
-                    style: Theme.of(context).textTheme.bodySmall,
+                    amountText,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: amountColor,
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
-                  const SizedBox(height: 4),
-                  if (betType != null && betType.isNotEmpty) ...[
-                    Text(
-                      betType,
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyMedium
-                          ?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 2),
-                  ],
-                  if (result.memo.isNotEmpty)
-                    Text(
-                      result.memo,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
+                  const SizedBox(width: 8),
+                  IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.grey),
+                    onPressed: onDelete,
+                  ),
                 ],
-              ),
-              Text(
-                amountText,
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      color: amountColor,
-                      fontWeight: FontWeight.bold,
-                    ),
               ),
             ],
           ),

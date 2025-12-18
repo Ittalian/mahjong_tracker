@@ -230,7 +230,7 @@ class _EditScreenState extends State<EditScreen> {
   late DateTime _selectedDate;
   late TextEditingController _amountController;
   late TextEditingController _memoController;
-  late TextEditingController _memberController;
+  final List<TextEditingController> _memberControllers = [];
   late TextEditingController _placeController;
   late TextEditingController _machineController;
 
@@ -262,12 +262,15 @@ class _EditScreenState extends State<EditScreen> {
       _umaRate = res.umaRate;
       _priceRate = res.priceRate;
       _chipRate = res.chipRate;
-      _memberController = TextEditingController(text: res.member.join('、'));
+      _initMemberControllers(res.member);
     } else {
       // Default to null to force selection or based on requirements
       _mahjongType = null;
       _umaRate = null;
-      _memberController = TextEditingController();
+      // Start with one empty controller
+      if (_memberControllers.isEmpty) {
+        _memberControllers.add(TextEditingController());
+      }
     }
 
     // Init Racing
@@ -281,15 +284,13 @@ class _EditScreenState extends State<EditScreen> {
       } else if (widget.result is KeirinResult) {
         _betType = (widget.result as KeirinResult).betType;
       }
-    } else {
-      // Set default bet type based on category if needed, but '単勝' is safe default
     }
 
     // Init Pachinko
     if (widget.result is PachinkoResult) {
       final res = widget.result as PachinkoResult;
       _pachinkoType = res.type;
-      _memberController.text = res.member.join('、'); // Reuse member controller
+      _initMemberControllers(res.member);
       _placeController = TextEditingController(text: res.place);
       _machineController = TextEditingController(text: res.machine);
     } else {
@@ -298,11 +299,24 @@ class _EditScreenState extends State<EditScreen> {
     }
   }
 
+  void _initMemberControllers(List<String> members) {
+    _memberControllers.clear();
+    if (members.isEmpty) {
+      _memberControllers.add(TextEditingController());
+    } else {
+      for (var member in members) {
+        _memberControllers.add(TextEditingController(text: member));
+      }
+    }
+  }
+
   @override
   void dispose() {
     _amountController.dispose();
     _memoController.dispose();
-    _memberController.dispose();
+    for (var controller in _memberControllers) {
+      controller.dispose();
+    }
     _placeController.dispose();
     _machineController.dispose();
     super.dispose();
@@ -328,14 +342,10 @@ class _EditScreenState extends State<EditScreen> {
       final memo = _memoController.text;
 
       // Parse members
-      final memberStr = _memberController.text;
-      final memberList = memberStr.isNotEmpty
-          ? memberStr
-              .split('、')
-              .map((e) => e.trim())
-              .where((e) => e.isNotEmpty)
-              .toList()
-          : <String>[];
+      final memberList = _memberControllers
+          .map((c) => c.text.trim())
+          .where((e) => e.isNotEmpty)
+          .toList();
 
       try {
         final handler = _handlers[widget.categoryType];
@@ -481,18 +491,7 @@ class _EditScreenState extends State<EditScreen> {
                     validator: (v) => v == null ? 'チップを選択してください' : null,
                   ),
                   const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _memberController,
-                    decoration: const InputDecoration(
-                      labelText: 'メンバー (カンマ区切り)',
-                    ),
-                    validator: (v) {
-                      if (v == null || v.isEmpty) {
-                        return 'メンバーを入力してください';
-                      }
-                      return null;
-                    },
-                  ),
+                  _buildMemberInput(),
                 ],
 
                 // Racing Fields
@@ -522,18 +521,7 @@ class _EditScreenState extends State<EditScreen> {
                   ),
                   if (_pachinkoType == '乗り打ち') ...[
                     const SizedBox(height: 16),
-                    TextFormField(
-                      controller: _memberController,
-                      decoration: const InputDecoration(
-                        labelText: 'メンバー (カンマ区切り)',
-                      ),
-                      validator: (v) {
-                        if (v == null || v.isEmpty) {
-                          return 'メンバーを入力してください';
-                        }
-                        return null;
-                      },
-                    ),
+                    _buildMemberInput(),
                   ],
                   const SizedBox(height: 16),
                   TextFormField(
@@ -608,5 +596,74 @@ class _EditScreenState extends State<EditScreen> {
       return MahjongResult.umaRates4ma;
     }
     return [];
+  }
+
+  Widget _buildMemberInput() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('メンバー', style: TextStyle(fontSize: 16)),
+        const SizedBox(height: 8),
+        ..._memberControllers.asMap().entries.map((entry) {
+          final index = entry.key;
+          final controller = entry.value;
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 8.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: controller,
+                    decoration: InputDecoration(
+                      labelText: 'メンバー ${index + 1}',
+                      border: const OutlineInputBorder(),
+                    ),
+                    validator: (v) {
+                      // Only validate strictly if we want every field filled,
+                      // or checks in _saveResult for at least one.
+                      // Let's require non-empty if it's the only one, or just warn on save.
+                      // For now, no strict per-field validator to allow easy removal?
+                      // Actually, let's require input for fields that are present.
+                      if (v == null || v.isEmpty) {
+                        return '入力してください';
+                      }
+                      return null;
+                    },
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.remove_circle_outline),
+                  onPressed: () {
+                    // Logic to remove
+                    setState(() {
+                      if (_memberControllers.length > 1) {
+                        // remove one
+                        controller.dispose();
+                        _memberControllers.removeAt(index);
+                      } else {
+                        // If only one, just clear it? Or don't allow remove?
+                        // User request: control with + and - buttons.
+                        // Ideally allow removing field.
+                        // If last one, maybe just clear text?
+                        controller.clear();
+                      }
+                    });
+                  },
+                ),
+              ],
+            ),
+          );
+        }),
+        TextButton.icon(
+          onPressed: () {
+            setState(() {
+              _memberControllers.add(TextEditingController());
+            });
+          },
+          icon: const Icon(Icons.add),
+          label: const Text('メンバーを追加'),
+        ),
+      ],
+    );
   }
 }
