@@ -619,11 +619,6 @@ class _EditScreenState extends State<EditScreen> {
                       border: const OutlineInputBorder(),
                     ),
                     validator: (v) {
-                      // Only validate strictly if we want every field filled,
-                      // or checks in _saveResult for at least one.
-                      // Let's require non-empty if it's the only one, or just warn on save.
-                      // For now, no strict per-field validator to allow easy removal?
-                      // Actually, let's require input for fields that are present.
                       if (v == null || v.isEmpty) {
                         return '入力してください';
                       }
@@ -634,17 +629,11 @@ class _EditScreenState extends State<EditScreen> {
                 IconButton(
                   icon: const Icon(Icons.remove_circle_outline),
                   onPressed: () {
-                    // Logic to remove
                     setState(() {
                       if (_memberControllers.length > 1) {
-                        // remove one
                         controller.dispose();
                         _memberControllers.removeAt(index);
                       } else {
-                        // If only one, just clear it? Or don't allow remove?
-                        // User request: control with + and - buttons.
-                        // Ideally allow removing field.
-                        // If last one, maybe just clear text?
                         controller.clear();
                       }
                     });

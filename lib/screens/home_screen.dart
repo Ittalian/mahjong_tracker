@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:mahjong_tracker/services/category_handler.dart';
 import 'package:mahjong_tracker/services/mahjong/mahjong_service.dart';
 import 'package:mahjong_tracker/services/horse_racing/horse_racing_service.dart';
@@ -7,7 +6,7 @@ import 'package:mahjong_tracker/services/boat_racing/boat_racing_service.dart';
 import 'package:mahjong_tracker/services/auto_racing/auto_racing_service.dart';
 import 'package:mahjong_tracker/services/keirin/keirin_service.dart';
 import 'package:mahjong_tracker/services/pachinko/pachinko_service.dart';
-import '../widgets/result_card.dart';
+import '../widgets/category_view.dart';
 import 'edit_screen.dart';
 import 'summary_screen.dart';
 
@@ -182,65 +181,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildCategoryPage(Map<String, dynamic> category) {
-    return StreamBuilder<List<dynamic>>(
-      stream: _getStreamForCategory(category['type']),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return Center(child: Text('エラーが発生しました: ${snapshot.error}'));
-        }
-
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        final results = snapshot.data ?? [];
-        final int totalAmount =
-            results.fold<int>(0, (sum, item) => sum + (item.amount as int));
-        final currencyFormatter = NumberFormat("#,##0", "ja_JP");
-
-        return Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              color: Theme.of(context).primaryColor.withOpacity(0.1),
-              width: double.infinity,
-              child: Column(
-                children: [
-                  Text(
-                    '${category['display_name']} 合計収支',
-                    style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    '${totalAmount >= 0 ? '+' : ''}${currencyFormatter.format(totalAmount)}',
-                    style: TextStyle(
-                      fontSize: 32,
-                      fontWeight: FontWeight.bold,
-                      color: totalAmount >= 0 ? Colors.green : Colors.red,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: results.isEmpty
-                  ? const Center(child: Text('データがありません'))
-                  : ListView.builder(
-                      itemCount: results.length,
-                      itemBuilder: (context, index) {
-                        final result = results[index];
-                        return ResultCard(
-                          result: result,
-                          onTap: () => _navigateToEditScreen(context, result),
-                          onDelete: () => _confirmDelete(context, result),
-                        );
-                      },
-                    ),
-            ),
-          ],
-        );
-      },
+    return CategoryView(
+      category: category,
+      streamGetter: () => _getStreamForCategory(category['type']),
+      onEdit: (result) => _navigateToEditScreen(context, result),
+      onDelete: (result) => _confirmDelete(context, result),
     );
   }
 
