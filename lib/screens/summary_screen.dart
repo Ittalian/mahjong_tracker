@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:rxdart/rxdart.dart';
-import '../services/firestore_service.dart';
+import 'package:mahjong_tracker/services/mahjong/mahjong_service.dart';
+import 'package:mahjong_tracker/services/horse_racing/horse_racing_service.dart';
+import 'package:mahjong_tracker/services/boat_racing/boat_racing_service.dart';
+import 'package:mahjong_tracker/services/auto_racing/auto_racing_service.dart';
+import 'package:mahjong_tracker/services/keirin/keirin_service.dart';
+import 'package:mahjong_tracker/services/pachinko/pachinko_service.dart';
 
 class SummaryScreen extends StatelessWidget {
   const SummaryScreen({super.key});
@@ -13,15 +18,14 @@ class SummaryScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final firestoreService = FirestoreService();
     final currencyFormatter = NumberFormat("#,##0", "ja_JP");
 
-    final mahjongStream = _getTotal(firestoreService.getMahjongResults());
-    final horseStream = _getTotal(firestoreService.getHorseRacingResults());
-    final boatStream = _getTotal(firestoreService.getBoatRacingResults());
-    final autoStream = _getTotal(firestoreService.getAutoRacingResults());
-    final keirinStream = _getTotal(firestoreService.getKeirinResults());
-    final pachinkoStream = _getTotal(firestoreService.getPachinkoResults());
+    final mahjongStream = _getTotal(MahjongService().getResults());
+    final horseStream = _getTotal(HorseRacingService().getResults());
+    final boatStream = _getTotal(BoatRacingService().getResults());
+    final autoStream = _getTotal(AutoRacingService().getResults());
+    final keirinStream = _getTotal(KeirinService().getResults());
+    final pachinkoStream = _getTotal(PachinkoService().getResults());
 
     return StreamBuilder<List<int>>(
       stream: CombineLatestStream.list([
@@ -57,36 +61,12 @@ class SummaryScreen extends StatelessWidget {
             pachinkoTotal;
 
         final categories = [
-          {
-            'label': '麻雀',
-            'total': mahjongTotal,
-            'icon': Icons.casino,
-          },
-          {
-            'label': '競馬',
-            'total': horseTotal,
-            'icon': Icons.pets,
-          },
-          {
-            'label': 'ボートレース',
-            'total': boatTotal,
-            'icon': Icons.directions_boat,
-          },
-          {
-            'label': 'オートレース',
-            'total': autoTotal,
-            'icon': Icons.motorcycle,
-          },
-          {
-            'label': '競輪',
-            'total': keirinTotal,
-            'icon': Icons.directions_bike,
-          },
-          {
-            'label': 'パチンコ',
-            'total': pachinkoTotal,
-            'icon': Icons.videogame_asset,
-          },
+          { 'label': '麻雀', 'total': mahjongTotal, 'icon': Icons.casino },
+          { 'label': '競馬', 'total': horseTotal, 'icon': Icons.pets },
+          { 'label': 'ボートレース', 'total': boatTotal, 'icon': Icons.directions_boat },
+          { 'label': 'オートレース', 'total': autoTotal, 'icon': Icons.motorcycle },
+          { 'label': '競輪', 'total': keirinTotal, 'icon': Icons.directions_bike },
+          { 'label': 'パチンコ', 'total': pachinkoTotal, 'icon': Icons.videogame_asset },
         ];
 
         return Column(

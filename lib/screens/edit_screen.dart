@@ -1,12 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:mahjong_tracker/models/mahjong_result.dart';
 import 'package:intl/intl.dart';
-import '../models/mahjong_result.dart';
-import '../services/firestore_service.dart';
-import '../models/horse_racing_result.dart';
-import '../models/boat_racing_result.dart';
-import '../models/auto_racing_result.dart';
-import '../models/keirin_result.dart';
-import '../models/pachinko_result.dart';
+import 'package:mahjong_tracker/models/horse_racing_result.dart';
+import 'package:mahjong_tracker/models/boat_racing_result.dart';
+import 'package:mahjong_tracker/models/auto_racing_result.dart';
+import 'package:mahjong_tracker/models/keirin_result.dart';
+import 'package:mahjong_tracker/models/pachinko_result.dart';
+import 'package:mahjong_tracker/services/category_handler.dart';
+import 'package:mahjong_tracker/services/mahjong/mahjong_service.dart';
+import 'package:mahjong_tracker/services/horse_racing/horse_racing_service.dart';
+import 'package:mahjong_tracker/services/boat_racing/boat_racing_service.dart';
+import 'package:mahjong_tracker/services/auto_racing/auto_racing_service.dart';
+import 'package:mahjong_tracker/services/keirin/keirin_service.dart';
+import 'package:mahjong_tracker/services/pachinko/pachinko_service.dart';
 
 class EditScreen extends StatefulWidget {
   final dynamic result;
@@ -24,7 +30,139 @@ class EditScreen extends StatefulWidget {
 
 class _EditScreenState extends State<EditScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _firestoreService = FirestoreService();
+  final _mahjongService = MahjongService();
+  final _horseRacingService = HorseRacingService();
+  final _boatRacingService = BoatRacingService();
+  final _autoRacingService = AutoRacingService();
+  final _keirinService = KeirinService();
+  final _pachinkoService = PachinkoService();
+
+  late final Map<String, CategoryHandler> _handlers = {
+    'mahjong': CategoryHandler(
+      streamGetter: () =>
+          _mahjongService.getResults().map((list) => list.cast<dynamic>()),
+      delete: (id) => _mahjongService.deleteResult(id),
+      add: (result) => _mahjongService.addResult(result),
+      update: (result) => _mahjongService.updateResult(result),
+      createResult: (
+              {id,
+              required date,
+              required amount,
+              betType,
+              required memo,
+              required createdAt}) =>
+          MahjongResult(
+              id: id,
+              date: date,
+              amount: amount,
+              memo: memo,
+              createdAt: createdAt),
+    ),
+    'horse_racing': CategoryHandler(
+      streamGetter: () =>
+          _horseRacingService.getResults().map((list) => list.cast<dynamic>()),
+      delete: (id) => _horseRacingService.deleteResult(id),
+      add: (result) => _horseRacingService.addResult(result),
+      update: (result) => _horseRacingService.updateResult(result),
+      createResult: (
+              {id,
+              required date,
+              required amount,
+              betType,
+              required memo,
+              required createdAt}) =>
+          HorseRacingResult(
+              id: id,
+              date: date,
+              amount: amount,
+              betType: betType ?? '',
+              memo: memo,
+              createdAt: createdAt),
+    ),
+    'boat_racing': CategoryHandler(
+      streamGetter: () =>
+          _boatRacingService.getResults().map((list) => list.cast<dynamic>()),
+      delete: (id) => _boatRacingService.deleteResult(id),
+      add: (result) => _boatRacingService.addResult(result),
+      update: (result) => _boatRacingService.updateResult(result),
+      createResult: (
+              {id,
+              required date,
+              required amount,
+              betType,
+              required memo,
+              required createdAt}) =>
+          BoatRacingResult(
+              id: id,
+              date: date,
+              amount: amount,
+              betType: betType ?? '',
+              memo: memo,
+              createdAt: createdAt),
+    ),
+    'auto_racing': CategoryHandler(
+      streamGetter: () =>
+          _autoRacingService.getResults().map((list) => list.cast<dynamic>()),
+      delete: (id) => _autoRacingService.deleteResult(id),
+      add: (result) => _autoRacingService.addResult(result),
+      update: (result) => _autoRacingService.updateResult(result),
+      createResult: (
+              {id,
+              required date,
+              required amount,
+              betType,
+              required memo,
+              required createdAt}) =>
+          AutoRacingResult(
+              id: id,
+              date: date,
+              amount: amount,
+              betType: betType ?? '',
+              memo: memo,
+              createdAt: createdAt),
+    ),
+    'keirin': CategoryHandler(
+      streamGetter: () =>
+          _keirinService.getResults().map((list) => list.cast<dynamic>()),
+      delete: (id) => _keirinService.deleteResult(id),
+      add: (result) => _keirinService.addResult(result),
+      update: (result) => _keirinService.updateResult(result),
+      createResult: (
+              {id,
+              required date,
+              required amount,
+              betType,
+              required memo,
+              required createdAt}) =>
+          KeirinResult(
+              id: id,
+              date: date,
+              amount: amount,
+              betType: betType ?? '',
+              memo: memo,
+              createdAt: createdAt),
+    ),
+    'pachinko': CategoryHandler(
+      streamGetter: () =>
+          _pachinkoService.getResults().map((list) => list.cast<dynamic>()),
+      delete: (id) => _pachinkoService.deleteResult(id),
+      add: (result) => _pachinkoService.addResult(result),
+      update: (result) => _pachinkoService.updateResult(result),
+      createResult: (
+              {id,
+              required date,
+              required amount,
+              betType,
+              required memo,
+              required createdAt}) =>
+          PachinkoResult(
+              id: id,
+              date: date,
+              amount: amount,
+              memo: memo,
+              createdAt: createdAt),
+    ),
+  };
 
   late DateTime _selectedDate;
   late TextEditingController _amountController;
@@ -84,100 +222,22 @@ class _EditScreenState extends State<EditScreen> {
       final betType = _betTypeController.text;
 
       try {
-        switch (widget.categoryType) {
-          case 'mahjong':
-            final newResult = MahjongResult(
-              id: widget.result?.id,
-              date: _selectedDate,
-              amount: amount,
-              memo: memo,
-              createdAt: widget.result?.createdAt ?? DateTime.now(),
-            );
-            if (widget.result == null) {
-              await _firestoreService.addMahjongResult(newResult);
-            } else {
-              await _firestoreService.updateMahjongResult(newResult);
-            }
-            break;
+        final handler = _handlers[widget.categoryType];
+        if (handler == null) return;
 
-          case 'horse_racing':
-            final newResult = HorseRacingResult(
-              id: widget.result?.id,
-              date: _selectedDate,
-              amount: amount,
-              betType: betType,
-              memo: memo,
-              createdAt: widget.result?.createdAt ?? DateTime.now(),
-            );
-            if (widget.result == null) {
-              await _firestoreService.addHorseRacingResult(newResult);
-            } else {
-              await _firestoreService.updateHorseRacingResult(newResult);
-            }
-            break;
+        final newResult = handler.createResult!(
+          id: widget.result?.id,
+          date: _selectedDate,
+          amount: amount,
+          betType: betType,
+          memo: memo,
+          createdAt: widget.result?.createdAt ?? DateTime.now(),
+        );
 
-          case 'boat_racing':
-            final newResult = BoatRacingResult(
-              id: widget.result?.id,
-              date: _selectedDate,
-              amount: amount,
-              betType: betType,
-              memo: memo,
-              createdAt: widget.result?.createdAt ?? DateTime.now(),
-            );
-            if (widget.result == null) {
-              await _firestoreService.addBoatRacingResult(newResult);
-            } else {
-              await _firestoreService.updateBoatRacingResult(newResult);
-            }
-            break;
-
-          case 'auto_racing':
-            final newResult = AutoRacingResult(
-              id: widget.result?.id,
-              date: _selectedDate,
-              amount: amount,
-              betType: betType,
-              memo: memo,
-              createdAt: widget.result?.createdAt ?? DateTime.now(),
-            );
-            if (widget.result == null) {
-              await _firestoreService.addAutoRacingResult(newResult);
-            } else {
-              await _firestoreService.updateAutoRacingResult(newResult);
-            }
-            break;
-
-          case 'keirin':
-            final newResult = KeirinResult(
-              id: widget.result?.id,
-              date: _selectedDate,
-              amount: amount,
-              betType: betType,
-              memo: memo,
-              createdAt: widget.result?.createdAt ?? DateTime.now(),
-            );
-            if (widget.result == null) {
-              await _firestoreService.addKeirinResult(newResult);
-            } else {
-              await _firestoreService.updateKeirinResult(newResult);
-            }
-            break;
-
-          case 'pachinko':
-            final newResult = PachinkoResult(
-              id: widget.result?.id,
-              date: _selectedDate,
-              amount: amount,
-              memo: memo,
-              createdAt: widget.result?.createdAt ?? DateTime.now(),
-            );
-            if (widget.result == null) {
-              await _firestoreService.addPachinkoResult(newResult);
-            } else {
-              await _firestoreService.updatePachinkoResult(newResult);
-            }
-            break;
+        if (widget.result == null) {
+          await handler.add(newResult);
+        } else {
+          await handler.update(newResult);
         }
 
         if (mounted) {

@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../services/firestore_service.dart';
+import 'package:mahjong_tracker/services/category_handler.dart';
+import 'package:mahjong_tracker/services/mahjong/mahjong_service.dart';
+import 'package:mahjong_tracker/services/horse_racing/horse_racing_service.dart';
+import 'package:mahjong_tracker/services/boat_racing/boat_racing_service.dart';
+import 'package:mahjong_tracker/services/auto_racing/auto_racing_service.dart';
+import 'package:mahjong_tracker/services/keirin/keirin_service.dart';
+import 'package:mahjong_tracker/services/pachinko/pachinko_service.dart';
 import '../widgets/result_card.dart';
 import 'edit_screen.dart';
 import 'summary_screen.dart';
@@ -13,7 +19,13 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final FirestoreService _firestoreService = FirestoreService();
+  final _mahjongService = MahjongService();
+  final _horseRacingService = HorseRacingService();
+  final _boatRacingService = BoatRacingService();
+  final _autoRacingService = AutoRacingService();
+  final _keirinService = KeirinService();
+  final _pachinkoService = PachinkoService();
+
   int _currentIndex = 0;
   final PageController _pageController = PageController();
 
@@ -61,6 +73,51 @@ class _HomeScreenState extends State<HomeScreen> {
       'type': 'pachinko'
     },
   ];
+
+  late final Map<String, CategoryHandler> _handlers = {
+    'mahjong': CategoryHandler(
+      streamGetter: () =>
+          _mahjongService.getResults().map((list) => list.cast<dynamic>()),
+      delete: (id) => _mahjongService.deleteResult(id),
+      add: (result) => _mahjongService.addResult(result),
+      update: (result) => _mahjongService.updateResult(result),
+    ),
+    'horse_racing': CategoryHandler(
+      streamGetter: () =>
+          _horseRacingService.getResults().map((list) => list.cast<dynamic>()),
+      delete: (id) => _horseRacingService.deleteResult(id),
+      add: (result) => _horseRacingService.addResult(result),
+      update: (result) => _horseRacingService.updateResult(result),
+    ),
+    'boat_racing': CategoryHandler(
+      streamGetter: () =>
+          _boatRacingService.getResults().map((list) => list.cast<dynamic>()),
+      delete: (id) => _boatRacingService.deleteResult(id),
+      add: (result) => _boatRacingService.addResult(result),
+      update: (result) => _boatRacingService.updateResult(result),
+    ),
+    'auto_racing': CategoryHandler(
+      streamGetter: () =>
+          _autoRacingService.getResults().map((list) => list.cast<dynamic>()),
+      delete: (id) => _autoRacingService.deleteResult(id),
+      add: (result) => _autoRacingService.addResult(result),
+      update: (result) => _autoRacingService.updateResult(result),
+    ),
+    'keirin': CategoryHandler(
+      streamGetter: () =>
+          _keirinService.getResults().map((list) => list.cast<dynamic>()),
+      delete: (id) => _keirinService.deleteResult(id),
+      add: (result) => _keirinService.addResult(result),
+      update: (result) => _keirinService.updateResult(result),
+    ),
+    'pachinko': CategoryHandler(
+      streamGetter: () =>
+          _pachinkoService.getResults().map((list) => list.cast<dynamic>()),
+      delete: (id) => _pachinkoService.deleteResult(id),
+      add: (result) => _pachinkoService.addResult(result),
+      update: (result) => _pachinkoService.updateResult(result),
+    ),
+  };
 
   @override
   void dispose() {
@@ -116,47 +173,12 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (confirmed == true && result.id != null) {
       final currentCategory = _categories[_currentIndex];
-
-      switch (currentCategory['type']) {
-        case 'mahjong':
-          await _firestoreService.deleteMahjongResult(result.id!);
-          break;
-        case 'horse_racing':
-          await _firestoreService.deleteHorseRacingResult(result.id!);
-          break;
-        case 'boat_racing':
-          await _firestoreService.deleteBoatRacingResult(result.id!);
-          break;
-        case 'auto_racing':
-          await _firestoreService.deleteAutoRacingResult(result.id!);
-          break;
-        case 'keirin':
-          await _firestoreService.deleteKeirinResult(result.id!);
-          break;
-        case 'pachinko':
-          await _firestoreService.deletePachinkoResult(result.id!);
-          break;
-      }
+      await _handlers[currentCategory['type']]!.delete(result.id!);
     }
   }
 
   Stream<List<dynamic>> _getStreamForCategory(String type) {
-    switch (type) {
-      case 'mahjong':
-        return _firestoreService.getMahjongResults();
-      case 'horse_racing':
-        return _firestoreService.getHorseRacingResults();
-      case 'boat_racing':
-        return _firestoreService.getBoatRacingResults();
-      case 'auto_racing':
-        return _firestoreService.getAutoRacingResults();
-      case 'keirin':
-        return _firestoreService.getKeirinResults();
-      case 'pachinko':
-        return _firestoreService.getPachinkoResults();
-      default:
-        return const Stream.empty();
-    }
+    return _handlers[type]!.streamGetter();
   }
 
   Widget _buildCategoryPage(Map<String, dynamic> category) {
