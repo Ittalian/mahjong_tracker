@@ -129,11 +129,17 @@ class ChartScreen extends StatelessWidget {
                             leftTitles: AxisTitles(
                               sideTitles: SideTitles(
                                 showTitles: true,
-                                reservedSize: 60,
+                                reservedSize: 80,
                                 getTitlesWidget: (value, meta) {
+                                  // 最大値と最小値のラベルは非表示
+                                  final maxY = _calculateMaxY();
+                                  final minY = _calculateMinY();
+                                  if (value == maxY || value == minY) {
+                                    return const SizedBox.shrink();
+                                  }
                                   return Text(
                                     currencyFormatter.format(value.toInt()),
-                                    style: const TextStyle(fontSize: 10),
+                                    style: const TextStyle(fontSize: 11),
                                   );
                                 },
                               ),
