@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:mahjong_tracker/utils/grouping_helper.dart';
+import 'package:mahjong_tracker/screens/chart_screen.dart';
 import '../widgets/result_card.dart';
 
 class CategoryView extends StatefulWidget {
@@ -155,6 +156,14 @@ class _CategoryViewState extends State<CategoryView> {
                         }).toList(),
                       ),
                     ),
+                    const SizedBox(width: 8),
+                    IconButton(
+                      icon: const Icon(Icons.bar_chart),
+                      tooltip: 'グラフ表示',
+                      onPressed: () {
+                        _showChartScreen(context, results);
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -240,6 +249,23 @@ class _CategoryViewState extends State<CategoryView> {
           onDelete: () => widget.onDelete(result),
         );
       },
+    );
+  }
+
+  /// グラフ画面を表示
+  void _showChartScreen(BuildContext context, List<dynamic> results) {
+    final aggregated = GroupingHelper.aggregateResults(
+        results, widget.category['type'], _selectedGroupProperty!);
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ChartScreen(
+          title:
+              '${widget.category['display_name']} - ${GroupingHelper.getPropertyLabel(_selectedGroupProperty!)}',
+          data: aggregated,
+        ),
+      ),
     );
   }
 }
