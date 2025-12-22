@@ -7,7 +7,7 @@ import 'package:mahjong_tracker/services/auto_racing/auto_racing_service.dart';
 import 'package:mahjong_tracker/services/keirin/keirin_service.dart';
 import 'package:mahjong_tracker/services/pachinko/pachinko_service.dart';
 import '../widgets/category_view.dart';
-import 'edit_screen.dart';
+import 'package:mahjong_tracker/screens/routers/edit_screen_router.dart';
 import 'summary_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -143,9 +143,9 @@ class _HomeScreenState extends State<HomeScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => EditScreen(
-          result: result,
+        builder: (context) => getEditScreenForCategory(
           categoryType: currentCategory['type'],
+          result: result,
         ),
       ),
     );
