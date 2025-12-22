@@ -9,7 +9,12 @@ import 'package:mahjong_tracker/services/keirin/keirin_service.dart';
 import 'package:mahjong_tracker/services/pachinko/pachinko_service.dart';
 
 class SummaryScreen extends StatelessWidget {
-  const SummaryScreen({super.key});
+  final Function(int)? onNavigateToCategory;
+
+  const SummaryScreen({
+    super.key,
+    this.onNavigateToCategory,
+  });
 
   Stream<int> _getTotal(Stream<List<dynamic>> stream) {
     return stream.map(
@@ -119,6 +124,7 @@ class SummaryScreen extends StatelessWidget {
                         color: total >= 0 ? Colors.green : Colors.red,
                       ),
                     ),
+                    onTap: () => onNavigateToCategory?.call(index),
                   );
                 },
               ),

@@ -210,7 +210,11 @@ class _HomeScreenState extends State<HomeScreen> {
         onPageChanged: _onPageChanged,
         children: [
           ..._categories.map((category) => _buildCategoryPage(category)),
-          const SummaryScreen(),
+          SummaryScreen(
+            onNavigateToCategory: (categoryIndex) {
+              _pageController.jumpToPage(categoryIndex);
+            },
+          ),
         ],
       ),
       floatingActionButton: _currentIndex < _categories.length
