@@ -59,7 +59,7 @@ class _CategoryViewState extends State<CategoryView> {
         return Column(
           children: [
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 46, 16, 16),
               color: Theme.of(context).primaryColor.withOpacity(0.1),
               width: double.infinity,
               child: Column(

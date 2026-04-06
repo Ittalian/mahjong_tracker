@@ -77,14 +77,14 @@ class SummaryScreen extends StatelessWidget {
         return Column(
           children: [
             Container(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.fromLTRB(24, 46, 24, 24),
               color: Theme.of(context).primaryColor.withOpacity(0.1),
               width: double.infinity,
               child: Column(
                 children: [
                   const Text(
                     '総合計収支',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8),
                   Text(
