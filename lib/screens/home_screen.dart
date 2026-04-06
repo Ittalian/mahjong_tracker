@@ -67,7 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
     {
       'id': 'pachinko',
       'label': 'パチ',
-      'display_name': 'パチ',
+      'display_name': 'パチンコ',
       'icon': Icons.videogame_asset,
       'type': 'pachinko'
     },
