@@ -26,6 +26,8 @@ class _CategoryViewState extends State<CategoryView> {
   bool _isDetailedView = false;
   String? _selectedGroupProperty;
   String? _selectedGroupValue;
+  String _selectedDateUnit = 'year';
+  DateTimeRange? _customDateRange;
   late final List<String> _groupableProperties;
 
   @override
@@ -51,7 +53,18 @@ class _CategoryViewState extends State<CategoryView> {
           return const Center(child: CircularProgressIndicator());
         }
 
-        final results = snapshot.data ?? [];
+        final rawResults = snapshot.data ?? [];
+        List<dynamic> results = rawResults;
+        
+        if (_isDetailedView && _selectedGroupProperty == 'date' && _selectedDateUnit == 'custom' && _customDateRange != null) {
+          DateTime start = DateTime(_customDateRange!.start.year, _customDateRange!.start.month, _customDateRange!.start.day);
+          DateTime end = DateTime(_customDateRange!.end.year, _customDateRange!.end.month, _customDateRange!.end.day, 23, 59, 59);
+          results = rawResults.where((r) {
+            DateTime d = r.date as DateTime;
+            return (d.isAtSameMomentAs(start) || d.isAfter(start)) && (d.isAtSameMomentAs(end) || d.isBefore(end));
+          }).toList();
+        }
+
         final int totalAmount =
             results.fold<int>(0, (sum, item) => sum + (item.amount as int));
         final currencyFormatter = NumberFormat("#,##0", "ja_JP");
@@ -167,6 +180,57 @@ class _CategoryViewState extends State<CategoryView> {
                   ],
                 ),
               ),
+            if (_isDetailedView &&
+                _selectedGroupProperty == 'date' &&
+                _selectedGroupValue == null)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                child: Column(
+                  children: [
+                    SegmentedButton<String>(
+                      segments: const [
+                        ButtonSegment(value: 'week', label: Text('週間')),
+                        ButtonSegment(value: 'month', label: Text('月間')),
+                        ButtonSegment(value: 'year', label: Text('年間')),
+                        ButtonSegment(value: 'custom', label: Text('指定')),
+                      ],
+                      selected: {_selectedDateUnit},
+                      onSelectionChanged: (Set<String> newSelection) async {
+                        final unit = newSelection.first;
+                        if (unit == 'custom') {
+                          final picked = await showDateRangePicker(
+                            context: context,
+                            firstDate: DateTime(2000),
+                            lastDate: DateTime.now().add(const Duration(days: 365)),
+                            initialDateRange: _customDateRange,
+                          );
+                          if (picked != null) {
+                            setState(() {
+                              _customDateRange = picked;
+                              _selectedDateUnit = unit;
+                            });
+                          }
+                        } else {
+                          setState(() {
+                            _selectedDateUnit = unit;
+                          });
+                        }
+                      },
+                      style: const ButtonStyle(
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ),
+                    if (_selectedDateUnit == 'custom' && _customDateRange != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Text(
+                          '${DateFormat('yyyy/MM/dd').format(_customDateRange!.start)} 〜 ${DateFormat('yyyy/MM/dd').format(_customDateRange!.end)}',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
             Expanded(
               child: results.isEmpty
                   ? const Center(child: Text('データがありません'))
@@ -194,7 +258,7 @@ class _CategoryViewState extends State<CategoryView> {
 
   Widget _buildDetailedList(List<dynamic> results, NumberFormat formatter) {
     final aggregated = GroupingHelper.aggregateResults(
-        results, widget.category['type'], _selectedGroupProperty!);
+        results, widget.category['type'], _selectedGroupProperty!, dateUnit: _selectedDateUnit);
 
     return ListView.builder(
       itemCount: aggregated.length,
@@ -233,7 +297,7 @@ class _CategoryViewState extends State<CategoryView> {
 
   Widget _buildFilteredList(List<dynamic> results) {
     final filtered = GroupingHelper.filterResults(results,
-        widget.category['type'], _selectedGroupProperty!, _selectedGroupValue!);
+        widget.category['type'], _selectedGroupProperty!, _selectedGroupValue!, dateUnit: _selectedDateUnit);
 
     if (filtered.isEmpty) {
       return const Center(child: Text('データがありません'));
@@ -255,7 +319,7 @@ class _CategoryViewState extends State<CategoryView> {
   /// グラフ画面を表示
   void _showChartScreen(BuildContext context, List<dynamic> results) {
     final aggregated = GroupingHelper.aggregateResults(
-        results, widget.category['type'], _selectedGroupProperty!);
+        results, widget.category['type'], _selectedGroupProperty!, dateUnit: _selectedDateUnit);
 
     Navigator.push(
       context,

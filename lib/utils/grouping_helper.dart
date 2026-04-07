@@ -4,10 +4,11 @@ import 'package:mahjong_tracker/models/boat_racing_result.dart';
 import 'package:mahjong_tracker/models/auto_racing_result.dart';
 import 'package:mahjong_tracker/models/keirin_result.dart';
 import 'package:mahjong_tracker/models/pachinko_result.dart';
+import 'package:intl/intl.dart';
 
 class GroupingHelper {
   static List<Map<String, dynamic>> aggregateResults(
-      List<dynamic> results, String categoryType, String property) {
+      List<dynamic> results, String categoryType, String property, {String dateUnit = 'year'}) {
     if (results.isEmpty) return [];
 
     final Map<String, int> groups = {};
@@ -30,6 +31,9 @@ class GroupingHelper {
             groups[member] = (groups[member] ?? 0) + (result.amount as int);
           }
         }
+      } else if (property == 'date') {
+        String key = _getDateKey(result.date as DateTime, dateUnit);
+        groups[key] = (groups[key] ?? 0) + (result.amount as int);
       } else {
         String key = _getPropertyValue(result, categoryType, property);
         groups[key] = (groups[key] ?? 0) + (result.amount as int);
@@ -41,14 +45,18 @@ class GroupingHelper {
     }).toList();
 
     // Sort by amount descending (optional, but usually nice)
-    aggregated
-        .sort((a, b) => (b['amount'] as int).compareTo(a['amount'] as int));
+    if (property == 'date') {
+      aggregated.sort((a, b) => (a['name'] as String).compareTo(b['name'] as String));
+    } else {
+      aggregated
+          .sort((a, b) => (b['amount'] as int).compareTo(a['amount'] as int));
+    }
 
     return aggregated;
   }
 
   static List<dynamic> filterResults(List<dynamic> results, String categoryType,
-      String property, String value) {
+      String property, String value, {String dateUnit = 'year'}) {
     if (results.isEmpty) return [];
 
     return results.where((result) {
@@ -66,10 +74,26 @@ class GroupingHelper {
         } else {
           return members.contains(value);
         }
+      } else if (property == 'date') {
+        return _getDateKey(result.date as DateTime, dateUnit) == value;
       } else {
         return _getPropertyValue(result, categoryType, property) == value;
       }
     }).toList();
+  }
+
+  static String _getDateKey(DateTime date, String dateUnit) {
+    if (dateUnit == 'year') {
+      return DateFormat('yyyy').format(date);
+    } else if (dateUnit == 'month') {
+      return DateFormat('yyyy/MM').format(date);
+    } else if (dateUnit == 'week') {
+      // Start of week (Monday)
+      DateTime startOfWeek = date.subtract(Duration(days: date.weekday - 1));
+      return DateFormat('yyyy/MM/dd~').format(startOfWeek);
+    } else {
+      return DateFormat('yyyy/MM/dd').format(date);
+    }
   }
 
   static String _getPropertyValue(
@@ -132,14 +156,14 @@ class GroupingHelper {
   static List<String> getGroupableProperties(String categoryType) {
     switch (categoryType) {
       case 'mahjong':
-        return ['type', 'umaRate', 'priceRate', 'chipRate', 'member'];
+        return ['type', 'umaRate', 'priceRate', 'chipRate', 'member', 'date'];
       case 'horse_racing':
       case 'boat_racing':
       case 'auto_racing':
       case 'keirin':
-        return ['betType'];
+        return ['betType', 'date'];
       case 'pachinko':
-        return ['type', 'member', 'place', 'machine'];
+        return ['type', 'member', 'place', 'machine', 'date'];
       default:
         return [];
     }
@@ -163,6 +187,8 @@ class GroupingHelper {
         return '場所';
       case 'machine':
         return '機種';
+      case 'date':
+        return '日付';
       default:
         return property;
     }

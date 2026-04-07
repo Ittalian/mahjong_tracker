@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 
 /// グラフ表示画面
 /// 集計データを棒グラフで表示する
-class ChartScreen extends StatelessWidget {
+class ChartScreen extends StatefulWidget {
   final String title;
   final List<Map<String, dynamic>> data;
 
@@ -15,14 +16,37 @@ class ChartScreen extends StatelessWidget {
   });
 
   @override
+  State<ChartScreen> createState() => _ChartScreenState();
+}
+
+class _ChartScreenState extends State<ChartScreen> {
+  @override
+  void initState() {
+    super.initState();
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+  }
+
+  @override
+  void dispose() {
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final currencyFormatter = NumberFormat("#,##0", "ja_JP");
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('$title - グラフ'),
+        title: Text(widget.title),
       ),
-      body: data.isEmpty
+      body: widget.data.isEmpty
           ? const Center(child: Text('データがありません'))
           : Column(
               children: [
@@ -63,9 +87,9 @@ class ChartScreen extends StatelessWidget {
                     scrollDirection: Axis.horizontal,
                     child: Container(
                       width:
-                          data.length * 80.0 < MediaQuery.of(context).size.width
+                          widget.data.length * 80.0 < MediaQuery.of(context).size.width
                               ? MediaQuery.of(context).size.width
-                              : data.length * 80.0,
+                              : widget.data.length * 80.0,
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
                         vertical: 8,
@@ -80,7 +104,7 @@ class ChartScreen extends StatelessWidget {
                             touchTooltipData: BarTouchTooltipData(
                               getTooltipItem:
                                   (group, groupIndex, rod, rodIndex) {
-                                final item = data[groupIndex];
+                                final item = widget.data[groupIndex];
                                 final amount = item['amount'] as int;
                                 return BarTooltipItem(
                                   '${item['name']}\n',
@@ -109,13 +133,13 @@ class ChartScreen extends StatelessWidget {
                                 reservedSize: 60,
                                 getTitlesWidget: (value, meta) {
                                   if (value.toInt() >= 0 &&
-                                      value.toInt() < data.length) {
+                                      value.toInt() < widget.data.length) {
                                     return Padding(
                                       padding: const EdgeInsets.only(top: 8.0),
                                       child: RotatedBox(
                                         quarterTurns: 1,
                                         child: Text(
-                                          data[value.toInt()]['name'],
+                                          widget.data[value.toInt()]['name'],
                                           style: const TextStyle(fontSize: 12),
                                           textAlign: TextAlign.start,
                                         ),
@@ -183,18 +207,18 @@ class ChartScreen extends StatelessWidget {
 
   /// 棒グラフの最大値を計算
   double _calculateMaxY() {
-    if (data.isEmpty) return 100;
+    if (widget.data.isEmpty) return 100;
     final maxAmount =
-        data.map((e) => e['amount'] as int).reduce((a, b) => a > b ? a : b);
+        widget.data.map((e) => e['amount'] as int).reduce((a, b) => a > b ? a : b);
     // 最大値より少し大きい値を返す
     return maxAmount > 0 ? maxAmount * 1.2 : 0;
   }
 
   /// 棒グラフの最小値を計算
   double _calculateMinY() {
-    if (data.isEmpty) return -100;
+    if (widget.data.isEmpty) return -100;
     final minAmount =
-        data.map((e) => e['amount'] as int).reduce((a, b) => a < b ? a : b);
+        widget.data.map((e) => e['amount'] as int).reduce((a, b) => a < b ? a : b);
     // 最小値より少し小さい値を返す
     return minAmount < 0 ? minAmount * 1.2 : 0;
   }
@@ -224,7 +248,7 @@ class ChartScreen extends StatelessWidget {
 
   /// 棒グラフのデータを作成
   List<BarChartGroupData> _createBarGroups() {
-    return data.asMap().entries.map((entry) {
+    return widget.data.asMap().entries.map((entry) {
       final index = entry.key;
       final item = entry.value;
       final amount = (item['amount'] as int).toDouble();
