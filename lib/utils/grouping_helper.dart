@@ -46,7 +46,7 @@ class GroupingHelper {
 
     // Sort by amount descending (optional, but usually nice)
     if (property == 'date') {
-      aggregated.sort((a, b) => (a['name'] as String).compareTo(b['name'] as String));
+      aggregated.sort((a, b) => (b['name'] as String).compareTo(a['name'] as String));
     } else {
       aggregated
           .sort((a, b) => (b['amount'] as int).compareTo(a['amount'] as int));
