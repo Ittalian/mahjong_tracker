@@ -35,7 +35,7 @@ class GroupingHelper {
         String key = _getDateKey(result.date as DateTime, dateUnit);
         groups[key] = (groups[key] ?? 0) + (result.amount as int);
       } else {
-        String key = _getPropertyValue(result, categoryType, property);
+        String key = getPropertyValue(result, categoryType, property);
         groups[key] = (groups[key] ?? 0) + (result.amount as int);
       }
     }
@@ -77,7 +77,7 @@ class GroupingHelper {
       } else if (property == 'date') {
         return _getDateKey(result.date as DateTime, dateUnit) == value;
       } else {
-        return _getPropertyValue(result, categoryType, property) == value;
+        return getPropertyValue(result, categoryType, property) == value;
       }
     }).toList();
   }
@@ -96,7 +96,7 @@ class GroupingHelper {
     }
   }
 
-  static String _getPropertyValue(
+  static String getPropertyValue(
       dynamic result, String categoryType, String property) {
     switch (categoryType) {
       case 'mahjong':

@@ -3,6 +3,8 @@ import 'package:intl/intl.dart';
 import 'package:mahjong_tracker/utils/grouping_helper.dart';
 import 'package:mahjong_tracker/screens/chart_screen.dart';
 import '../widgets/result_card.dart';
+import 'package:mahjong_tracker/models/mahjong_result.dart';
+import 'package:mahjong_tracker/models/pachinko_result.dart';
 
 class CategoryView extends StatefulWidget {
   final Map<String, dynamic> category;
@@ -29,6 +31,8 @@ class _CategoryViewState extends State<CategoryView> {
   String _selectedDateUnit = 'year';
   DateTimeRange? _customDateRange;
   late final List<String> _groupableProperties;
+  Map<String, String> _activeFilters = {};
+  DateTimeRange? _filterDateRange;
 
   @override
   void initState() {
@@ -55,13 +59,87 @@ class _CategoryViewState extends State<CategoryView> {
 
         final rawResults = snapshot.data ?? [];
         List<dynamic> results = rawResults;
-        
-        if (_isDetailedView && _selectedGroupProperty == 'date' && _selectedDateUnit == 'custom' && _customDateRange != null) {
-          DateTime start = DateTime(_customDateRange!.start.year, _customDateRange!.start.month, _customDateRange!.start.day);
-          DateTime end = DateTime(_customDateRange!.end.year, _customDateRange!.end.month, _customDateRange!.end.day, 23, 59, 59);
+
+        if (_isDetailedView &&
+            _selectedGroupProperty == 'date' &&
+            _selectedDateUnit == 'custom' &&
+            _customDateRange != null) {
+          DateTime start = DateTime(_customDateRange!.start.year,
+              _customDateRange!.start.month, _customDateRange!.start.day);
+          DateTime end = DateTime(
+              _customDateRange!.end.year,
+              _customDateRange!.end.month,
+              _customDateRange!.end.day,
+              23,
+              59,
+              59);
           results = rawResults.where((r) {
             DateTime d = r.date as DateTime;
-            return (d.isAtSameMomentAs(start) || d.isAfter(start)) && (d.isAtSameMomentAs(end) || d.isBefore(end));
+            return (d.isAtSameMomentAs(start) || d.isAfter(start)) &&
+                (d.isAtSameMomentAs(end) || d.isBefore(end));
+          }).toList();
+        }
+
+        bool hasActiveFilters =
+            _activeFilters.isNotEmpty || _filterDateRange != null;
+        if (hasActiveFilters) {
+          results = results.where((r) {
+            bool isMatch = true;
+
+            _activeFilters.forEach((prop, query) {
+              if (!isMatch) return;
+              if (query.trim().isEmpty) return;
+
+              final keywords = query.trim().split(RegExp(r'\s+'));
+
+              if (prop == 'memo') {
+                final memo = (r.memo as String?) ?? '';
+                bool propMatch = keywords
+                    .any((kw) => memo.toLowerCase().contains(kw.toLowerCase()));
+                if (!propMatch) isMatch = false;
+              } else {
+                final val = GroupingHelper.getPropertyValue(
+                    r, widget.category['type'], prop);
+                bool propMatch = keywords
+                    .any((kw) => val.toLowerCase().contains(kw.toLowerCase()));
+
+                if (prop == 'member' &&
+                    (widget.category['type'] == 'mahjong' ||
+                        widget.category['type'] == 'pachinko')) {
+                  List<String> members = [];
+                  if (r is MahjongResult)
+                    members = r.member;
+                  else if (r is PachinkoResult) members = r.member;
+
+                  if (members.isNotEmpty) {
+                    propMatch = keywords.any((kw) => members.any(
+                        (m) => m.toLowerCase().contains(kw.toLowerCase())));
+                  } else {
+                    propMatch = keywords.any((kw) => 'ソロ'.contains(kw));
+                  }
+                }
+
+                if (!propMatch) isMatch = false;
+              }
+            });
+
+            if (isMatch && _filterDateRange != null) {
+              DateTime d = r.date as DateTime;
+              DateTime start = DateTime(_filterDateRange!.start.year,
+                  _filterDateRange!.start.month, _filterDateRange!.start.day);
+              DateTime end = DateTime(
+                  _filterDateRange!.end.year,
+                  _filterDateRange!.end.month,
+                  _filterDateRange!.end.day,
+                  23,
+                  59,
+                  59);
+              if (d.isBefore(start) || d.isAfter(end)) {
+                isMatch = false;
+              }
+            }
+
+            return isMatch;
           }).toList();
         }
 
@@ -72,7 +150,7 @@ class _CategoryViewState extends State<CategoryView> {
         return Column(
           children: [
             Container(
-              padding: const EdgeInsets.fromLTRB(16, 46, 16, 16),
+              padding: const EdgeInsets.fromLTRB(16, 46, 16, 0),
               color: Theme.of(context).primaryColor.withOpacity(0.1),
               width: double.infinity,
               child: Column(
@@ -118,6 +196,21 @@ class _CategoryViewState extends State<CategoryView> {
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
                     ),
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.center,
+                    child: IconButton(
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
+                      icon: Icon(
+                        Icons.search,
+                        color: hasActiveFilters
+                            ? Theme.of(context).primaryColor
+                            : null,
+                      ),
+                      onPressed: () => _showFilterBottomSheet(context),
+                    ),
+                  ),
                   if (_isDetailedView && _selectedGroupValue != null) ...[
                     const SizedBox(height: 8),
                     Row(
@@ -184,7 +277,8 @@ class _CategoryViewState extends State<CategoryView> {
                 _selectedGroupProperty == 'date' &&
                 _selectedGroupValue == null)
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                 child: Column(
                   children: [
                     SegmentedButton<String>(
@@ -201,7 +295,8 @@ class _CategoryViewState extends State<CategoryView> {
                           final picked = await showDateRangePicker(
                             context: context,
                             firstDate: DateTime(2000),
-                            lastDate: DateTime.now().add(const Duration(days: 365)),
+                            lastDate:
+                                DateTime.now().add(const Duration(days: 365)),
                             initialDateRange: _customDateRange,
                           );
                           if (picked != null) {
@@ -220,7 +315,8 @@ class _CategoryViewState extends State<CategoryView> {
                         visualDensity: VisualDensity.compact,
                       ),
                     ),
-                    if (_selectedDateUnit == 'custom' && _customDateRange != null)
+                    if (_selectedDateUnit == 'custom' &&
+                        _customDateRange != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 8.0),
                         child: Text(
@@ -258,7 +354,8 @@ class _CategoryViewState extends State<CategoryView> {
 
   Widget _buildDetailedList(List<dynamic> results, NumberFormat formatter) {
     final aggregated = GroupingHelper.aggregateResults(
-        results, widget.category['type'], _selectedGroupProperty!, dateUnit: _selectedDateUnit);
+        results, widget.category['type'], _selectedGroupProperty!,
+        dateUnit: _selectedDateUnit);
 
     return ListView.builder(
       itemCount: aggregated.length,
@@ -297,7 +394,8 @@ class _CategoryViewState extends State<CategoryView> {
 
   Widget _buildFilteredList(List<dynamic> results) {
     final filtered = GroupingHelper.filterResults(results,
-        widget.category['type'], _selectedGroupProperty!, _selectedGroupValue!, dateUnit: _selectedDateUnit);
+        widget.category['type'], _selectedGroupProperty!, _selectedGroupValue!,
+        dateUnit: _selectedDateUnit);
 
     if (filtered.isEmpty) {
       return const Center(child: Text('データがありません'));
@@ -319,7 +417,8 @@ class _CategoryViewState extends State<CategoryView> {
   /// グラフ画面を表示
   void _showChartScreen(BuildContext context, List<dynamic> results) {
     final aggregated = GroupingHelper.aggregateResults(
-        results, widget.category['type'], _selectedGroupProperty!, dateUnit: _selectedDateUnit);
+        results, widget.category['type'], _selectedGroupProperty!,
+        dateUnit: _selectedDateUnit);
 
     Navigator.push(
       context,
@@ -328,6 +427,182 @@ class _CategoryViewState extends State<CategoryView> {
           title:
               '${widget.category['display_name']} - ${GroupingHelper.getPropertyLabel(_selectedGroupProperty!)}',
           data: aggregated,
+        ),
+      ),
+    );
+  }
+
+  void _showFilterBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        return _FilterBottomSheet(
+          category: widget.category,
+          groupableProperties: _groupableProperties,
+          initialFilters: _activeFilters,
+          initialDateRange: _filterDateRange,
+          onApply: (filters, dateRange) {
+            setState(() {
+              _activeFilters = filters;
+              _filterDateRange = dateRange;
+            });
+          },
+        );
+      },
+    );
+  }
+}
+
+class _FilterBottomSheet extends StatefulWidget {
+  final Map<String, dynamic> category;
+  final List<String> groupableProperties;
+  final Map<String, String> initialFilters;
+  final DateTimeRange? initialDateRange;
+  final void Function(Map<String, String>, DateTimeRange?) onApply;
+
+  const _FilterBottomSheet({
+    required this.category,
+    required this.groupableProperties,
+    required this.initialFilters,
+    required this.initialDateRange,
+    required this.onApply,
+  });
+
+  @override
+  State<_FilterBottomSheet> createState() => _FilterBottomSheetState();
+}
+
+class _FilterBottomSheetState extends State<_FilterBottomSheet> {
+  late Map<String, TextEditingController> _controllers;
+  DateTimeRange? _dateRange;
+
+  @override
+  void initState() {
+    super.initState();
+    _controllers = {};
+    for (final prop in widget.groupableProperties) {
+      if (prop == 'date') continue;
+      _controllers[prop] =
+          TextEditingController(text: widget.initialFilters[prop] ?? '');
+    }
+    _controllers['memo'] =
+        TextEditingController(text: widget.initialFilters['memo'] ?? '');
+    _dateRange = widget.initialDateRange;
+  }
+
+  @override
+  void dispose() {
+    for (final controller in _controllers.values) {
+      controller.dispose();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+        left: 16,
+        right: 16,
+        top: 16,
+      ),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  '絞り込み',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                TextButton(
+                  onPressed: () {
+                    for (var controller in _controllers.values) {
+                      controller.clear();
+                    }
+                    setState(() {
+                      _dateRange = null;
+                    });
+                  },
+                  child: const Text('クリア'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            ..._controllers.entries.map((entry) {
+              final prop = entry.key;
+              final controller = entry.value;
+              final label =
+                  prop == 'memo' ? 'メモ' : GroupingHelper.getPropertyLabel(prop);
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 12.0),
+                child: TextField(
+                  controller: controller,
+                  decoration: InputDecoration(
+                    labelText: label,
+                    hintText: 'スペース区切りで複数指定',
+                    border: const OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                ),
+              );
+            }),
+            if (widget.groupableProperties.contains('date'))
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12.0),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        _dateRange == null
+                            ? '日付: 指定なし'
+                            : '日付: ${DateFormat('yyyy/MM/dd').format(_dateRange!.start)} 〜 ${DateFormat('yyyy/MM/dd').format(_dateRange!.end)}',
+                      ),
+                    ),
+                    ElevatedButton(
+                      onPressed: () async {
+                        final picked = await showDateRangePicker(
+                          context: context,
+                          firstDate: DateTime(2000),
+                          lastDate:
+                              DateTime.now().add(const Duration(days: 365)),
+                          initialDateRange: _dateRange,
+                        );
+                        if (picked != null) {
+                          setState(() {
+                            _dateRange = picked;
+                          });
+                        }
+                      },
+                      child: const Text('期間を選択'),
+                    ),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () {
+                  final filters = <String, String>{};
+                  _controllers.forEach((key, value) {
+                    if (value.text.trim().isNotEmpty) {
+                      filters[key] = value.text.trim();
+                    }
+                  });
+                  widget.onApply(filters, _dateRange);
+                  Navigator.pop(context);
+                },
+                child: const Text('適用'),
+              ),
+            ),
+            const SizedBox(height: 32),
+          ],
         ),
       ),
     );

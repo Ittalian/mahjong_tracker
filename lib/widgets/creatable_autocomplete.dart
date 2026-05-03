@@ -212,25 +212,13 @@ class _CreatableAutocompleteState<T extends Object> extends State<CreatableAutoc
         );
       },
       optionsViewBuilder: (context, onSelected, options) {
-        final screenHeight = MediaQuery.of(context).size.height;
-        final keyboardHeight = MediaQuery.of(context).viewInsets.bottom;
-        final availableHeight = screenHeight - keyboardHeight;
-        
-        // キーボードを除いた高さの40%を最大高さとしつつ、上限・下限を設ける
-        double calculatedMaxHeight = availableHeight * 0.4;
-        if (calculatedMaxHeight > 250) {
-          calculatedMaxHeight = 250;
-        } else if (calculatedMaxHeight < 150) {
-          calculatedMaxHeight = 150;
-        }
-
         return Align(
           alignment: Alignment.topLeft,
           child: Material(
             elevation: 4.0,
             child: ConstrainedBox(
               constraints: BoxConstraints(
-                maxHeight: calculatedMaxHeight,
+                maxHeight: 250,
                 maxWidth: MediaQuery.of(context).size.width - 32, // パディング考慮
               ),
               child: ListView.builder(
