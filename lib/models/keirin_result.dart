@@ -18,6 +18,7 @@ class KeirinResult {
   final String betType;
   final String memo;
   final DateTime createdAt;
+  final String place;
 
   KeirinResult({
     this.id,
@@ -26,6 +27,7 @@ class KeirinResult {
     required this.betType,
     required this.memo,
     required this.createdAt,
+    this.place = '',
   });
 
   factory KeirinResult.fromFirestore(DocumentSnapshot doc) {
@@ -37,6 +39,7 @@ class KeirinResult {
       betType: data['betType'] ?? '単勝',
       memo: data['memo'] ?? '',
       createdAt: (data['createdAt'] as Timestamp).toDate(),
+      place: data['place'] ?? '',
     );
   }
 
@@ -47,6 +50,7 @@ class KeirinResult {
       'betType': betType,
       'memo': memo,
       'createdAt': Timestamp.fromDate(createdAt),
+      'place': place,
     };
   }
 }

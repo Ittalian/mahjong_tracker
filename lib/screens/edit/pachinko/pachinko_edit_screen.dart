@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:mahjong_tracker/models/pachinko_result.dart';
 import 'package:mahjong_tracker/screens/edit/base/base_edit_screen.dart';
 import 'package:mahjong_tracker/services/pachinko/pachinko_service.dart';
+import 'package:mahjong_tracker/models/machine_type.dart';
+import 'package:mahjong_tracker/services/machine_type_service.dart';
+import 'package:mahjong_tracker/widgets/creatable_autocomplete.dart';
 
 /// パチンコの収支編集画面
 class PachinkoEditScreen extends BaseEditScreen {
@@ -16,11 +19,19 @@ class PachinkoEditScreen extends BaseEditScreen {
 
 class _PachinkoEditScreenState extends BaseEditScreenState<PachinkoEditScreen> {
   final _pachinkoService = PachinkoService();
+  final _machineTypeService = MachineTypeService();
 
   String _pachinkoType = 'ソロ';
   final List<TextEditingController> _memberControllers = [];
-  late TextEditingController _placeController;
-  late TextEditingController _machineController;
+  String _machineValue = '';
+
+  @override
+  String get categoryType => 'pachinko';
+
+  @override
+  Future<void> updatePlaceNameInResults(String oldName, String newName) async {
+    await _pachinkoService.updatePlaceNames(oldName, newName);
+  }
 
   @override
   void initCategorySpecificFields() {
@@ -28,11 +39,9 @@ class _PachinkoEditScreenState extends BaseEditScreenState<PachinkoEditScreen> {
       final res = widget.result as PachinkoResult;
       _pachinkoType = res.type;
       _initMemberControllers(res.member);
-      _placeController = TextEditingController(text: res.place);
-      _machineController = TextEditingController(text: res.machine);
+      _machineValue = res.machine;
     } else {
-      _placeController = TextEditingController();
-      _machineController = TextEditingController();
+      _machineValue = '';
       if (_memberControllers.isEmpty) {
         _memberControllers.add(TextEditingController());
       }
@@ -55,8 +64,6 @@ class _PachinkoEditScreenState extends BaseEditScreenState<PachinkoEditScreen> {
     for (var controller in _memberControllers) {
       controller.dispose();
     }
-    _placeController.dispose();
-    _machineController.dispose();
   }
 
   @override
@@ -77,30 +84,41 @@ class _PachinkoEditScreenState extends BaseEditScreenState<PachinkoEditScreen> {
           buildMemberInput(_memberControllers),
         ],
         const SizedBox(height: 16),
-        TextFormField(
-          controller: _placeController,
-          decoration: const InputDecoration(
-            labelText: '場所',
-          ),
-          validator: (v) {
-            if (v == null || v.isEmpty) {
-              return '場所を入力してください';
-            }
-            return null;
-          },
-        ),
-        const SizedBox(height: 16),
-        TextFormField(
-          controller: _machineController,
-          decoration: const InputDecoration(
-            labelText: '台の種類',
-          ),
-          validator: (v) {
-            if (v == null || v.isEmpty) {
-              return '台の種類を入力してください';
-            }
-            return null;
-          },
+        StreamBuilder<List<MachineType>>(
+          stream: _machineTypeService.getMachineTypes(),
+          builder: (context, snapshot) {
+            final machines = snapshot.data ?? [];
+            return CreatableAutocomplete<MachineType>(
+              key: ValueKey('machine_${machines.length}_${machines.hashCode}'),
+              options: machines,
+              displayStringForOption: (m) => m.name,
+              labelText: '台の種類',
+              initialValue: _machineValue,
+              onChanged: (v) => _machineValue = v,
+              onCreate: (name) async {
+                await _machineTypeService.addMachineType(MachineType(name: name, createdAt: DateTime.now()));
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('保存しました')));
+                }
+              },
+              onEdit: (machine, newName) async {
+                final oldName = machine.name;
+                await _machineTypeService.updateMachineType(MachineType(id: machine.id, name: newName, createdAt: machine.createdAt));
+                if (oldName != newName) {
+                  await _pachinkoService.updateMachineNames(oldName, newName);
+                }
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('保存しました')));
+                }
+              },
+              onDelete: (machine) async {
+                await _machineTypeService.deleteMachineType(machine.id!);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('削除しました')));
+                }
+              },
+            );
+          }
         ),
       ],
     );
@@ -127,8 +145,8 @@ class _PachinkoEditScreenState extends BaseEditScreenState<PachinkoEditScreen> {
           createdAt: widget.result?.createdAt ?? DateTime.now(),
           type: _pachinkoType,
           member: _pachinkoType == '乗り打ち' ? memberList : [],
-          place: _placeController.text,
-          machine: _machineController.text,
+          place: placeValue,
+          machine: _machineValue,
         );
 
         if (widget.result == null) {
@@ -138,6 +156,7 @@ class _PachinkoEditScreenState extends BaseEditScreenState<PachinkoEditScreen> {
         }
 
         if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('保存しました')));
           Navigator.pop(context);
         }
       } catch (e) {

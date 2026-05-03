@@ -24,6 +24,14 @@ class _MahjongEditScreenState extends BaseEditScreenState<MahjongEditScreen> {
   final List<TextEditingController> _memberControllers = [];
 
   @override
+  String get categoryType => 'mahjong';
+
+  @override
+  Future<void> updatePlaceNameInResults(String oldName, String newName) async {
+    await _mahjongService.updatePlaceNames(oldName, newName);
+  }
+
+  @override
   void initCategorySpecificFields() {
     if (widget.result is MahjongResult) {
       final res = widget.result as MahjongResult;
@@ -149,6 +157,7 @@ class _MahjongEditScreenState extends BaseEditScreenState<MahjongEditScreen> {
           priceRate: _priceRate ?? 'テンピン',
           chipRate: _chipRate,
           member: memberList,
+          place: placeValue,
         );
 
         if (widget.result == null) {
@@ -158,6 +167,7 @@ class _MahjongEditScreenState extends BaseEditScreenState<MahjongEditScreen> {
         }
 
         if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('保存しました')));
           Navigator.pop(context);
         }
       } catch (e) {

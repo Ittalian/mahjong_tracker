@@ -21,6 +21,14 @@ class _BoatRacingEditScreenState
   String _betType = '単勝';
 
   @override
+  String get categoryType => 'boat_racing';
+
+  @override
+  Future<void> updatePlaceNameInResults(String oldName, String newName) async {
+    await _boatRacingService.updatePlaceNames(oldName, newName);
+  }
+
+  @override
   void initCategorySpecificFields() {
     if (widget.result is BoatRacingResult) {
       _betType = (widget.result as BoatRacingResult).betType;
@@ -59,6 +67,7 @@ class _BoatRacingEditScreenState
           betType: _betType,
           memo: memo,
           createdAt: widget.result?.createdAt ?? DateTime.now(),
+          place: placeValue,
         );
 
         if (widget.result == null) {
@@ -68,6 +77,7 @@ class _BoatRacingEditScreenState
         }
 
         if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('保存しました')));
           Navigator.pop(context);
         }
       } catch (e) {

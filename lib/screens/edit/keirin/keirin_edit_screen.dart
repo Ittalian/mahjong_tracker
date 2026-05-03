@@ -20,6 +20,14 @@ class _KeirinEditScreenState extends BaseEditScreenState<KeirinEditScreen> {
   String _betType = '単勝';
 
   @override
+  String get categoryType => 'keirin';
+
+  @override
+  Future<void> updatePlaceNameInResults(String oldName, String newName) async {
+    await _keirinService.updatePlaceNames(oldName, newName);
+  }
+
+  @override
   void initCategorySpecificFields() {
     if (widget.result is KeirinResult) {
       _betType = (widget.result as KeirinResult).betType;
@@ -58,6 +66,7 @@ class _KeirinEditScreenState extends BaseEditScreenState<KeirinEditScreen> {
           betType: _betType,
           memo: memo,
           createdAt: widget.result?.createdAt ?? DateTime.now(),
+          place: placeValue,
         );
 
         if (widget.result == null) {
@@ -67,6 +76,7 @@ class _KeirinEditScreenState extends BaseEditScreenState<KeirinEditScreen> {
         }
 
         if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('保存しました')));
           Navigator.pop(context);
         }
       } catch (e) {

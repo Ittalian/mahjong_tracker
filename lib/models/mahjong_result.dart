@@ -18,6 +18,7 @@ class MahjongResult {
   final String priceRate;
   final int chipRate;
   final List<String> member;
+  final String place;
 
   MahjongResult({
     this.id,
@@ -30,6 +31,7 @@ class MahjongResult {
     this.priceRate = 'テンピン',
     this.chipRate = 50,
     this.member = const [],
+    this.place = '',
   });
 
   factory MahjongResult.fromFirestore(DocumentSnapshot doc) {
@@ -45,6 +47,7 @@ class MahjongResult {
       priceRate: data['priceRate'] ?? 'テンピン',
       chipRate: data['chipRate'] ?? 50,
       member: List<String>.from(data['member'] ?? []),
+      place: data['place'] ?? '',
     );
   }
 
@@ -59,6 +62,7 @@ class MahjongResult {
       'priceRate': priceRate,
       'chipRate': chipRate,
       'member': member,
+      'place': place,
     };
   }
 }

@@ -18,6 +18,7 @@ class HorseRacingResult {
   final String betType;
   final String memo;
   final DateTime createdAt;
+  final String place;
 
   HorseRacingResult({
     this.id,
@@ -26,6 +27,7 @@ class HorseRacingResult {
     required this.betType,
     required this.memo,
     required this.createdAt,
+    this.place = '',
   });
 
   factory HorseRacingResult.fromFirestore(DocumentSnapshot doc) {
@@ -37,6 +39,7 @@ class HorseRacingResult {
       betType: data['betType'] ?? '単勝',
       memo: data['memo'] ?? '',
       createdAt: (data['createdAt'] as Timestamp).toDate(),
+      place: data['place'] ?? '',
     );
   }
 
@@ -47,6 +50,7 @@ class HorseRacingResult {
       'betType': betType,
       'memo': memo,
       'createdAt': Timestamp.fromDate(createdAt),
+      'place': place,
     };
   }
 }

@@ -110,29 +110,35 @@ class GroupingHelper {
               return result.priceRate;
             case 'chipRate':
               return result.chipRate.toString();
+            case 'place':
+              return result.place.isEmpty ? '未設定' : result.place;
             default:
               return '';
           }
         }
         break;
       case 'horse_racing':
-        if (result is HorseRacingResult && property == 'betType') {
-          return result.betType;
+        if (result is HorseRacingResult) {
+          if (property == 'betType') return result.betType;
+          if (property == 'place') return result.place.isEmpty ? '未設定' : result.place;
         }
         break;
       case 'boat_racing':
-        if (result is BoatRacingResult && property == 'betType') {
-          return result.betType;
+        if (result is BoatRacingResult) {
+          if (property == 'betType') return result.betType;
+          if (property == 'place') return result.place.isEmpty ? '未設定' : result.place;
         }
         break;
       case 'auto_racing':
-        if (result is AutoRacingResult && property == 'betType') {
-          return result.betType;
+        if (result is AutoRacingResult) {
+          if (property == 'betType') return result.betType;
+          if (property == 'place') return result.place.isEmpty ? '未設定' : result.place;
         }
         break;
       case 'keirin':
-        if (result is KeirinResult && property == 'betType') {
-          return result.betType;
+        if (result is KeirinResult) {
+          if (property == 'betType') return result.betType;
+          if (property == 'place') return result.place.isEmpty ? '未設定' : result.place;
         }
         break;
       case 'pachinko':
@@ -156,12 +162,12 @@ class GroupingHelper {
   static List<String> getGroupableProperties(String categoryType) {
     switch (categoryType) {
       case 'mahjong':
-        return ['type', 'umaRate', 'priceRate', 'chipRate', 'member', 'date'];
+        return ['type', 'umaRate', 'priceRate', 'chipRate', 'member', 'place', 'date'];
       case 'horse_racing':
       case 'boat_racing':
       case 'auto_racing':
       case 'keirin':
-        return ['betType', 'date'];
+        return ['betType', 'place', 'date'];
       case 'pachinko':
         return ['type', 'member', 'place', 'machine', 'date'];
       default:

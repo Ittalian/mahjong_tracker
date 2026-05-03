@@ -13,6 +13,11 @@ import 'package:mahjong_tracker/services/boat_racing/boat_racing_service.dart';
 import 'package:mahjong_tracker/services/auto_racing/auto_racing_service.dart';
 import 'package:mahjong_tracker/services/keirin/keirin_service.dart';
 import 'package:mahjong_tracker/services/pachinko/pachinko_service.dart';
+import 'package:mahjong_tracker/models/place.dart';
+import 'package:mahjong_tracker/services/place_service.dart';
+import 'package:mahjong_tracker/models/machine_type.dart';
+import 'package:mahjong_tracker/services/machine_type_service.dart';
+import 'package:mahjong_tracker/widgets/creatable_autocomplete.dart';
 
 class EditScreen extends StatefulWidget {
   final dynamic result;
@@ -36,6 +41,8 @@ class _EditScreenState extends State<EditScreen> {
   final _autoRacingService = AutoRacingService();
   final _keirinService = KeirinService();
   final _pachinkoService = PachinkoService();
+  final _placeService = PlaceService();
+  final _machineTypeService = MachineTypeService();
 
   late final Map<String, CategoryHandler> _handlers = {
     'mahjong': CategoryHandler(
@@ -70,6 +77,7 @@ class _EditScreenState extends State<EditScreen> {
         priceRate: priceRate ?? 'テンピン',
         chipRate: chipRate ?? 50,
         member: member ?? [],
+        place: place ?? '',
       ),
     ),
     'horse_racing': CategoryHandler(
@@ -100,6 +108,7 @@ class _EditScreenState extends State<EditScreen> {
         betType: betType ?? '単勝',
         memo: memo,
         createdAt: createdAt,
+        place: place ?? '',
       ),
     ),
     'boat_racing': CategoryHandler(
@@ -130,6 +139,7 @@ class _EditScreenState extends State<EditScreen> {
         betType: betType ?? '単勝',
         memo: memo,
         createdAt: createdAt,
+        place: place ?? '',
       ),
     ),
     'auto_racing': CategoryHandler(
@@ -160,6 +170,7 @@ class _EditScreenState extends State<EditScreen> {
         betType: betType ?? '単勝',
         memo: memo,
         createdAt: createdAt,
+        place: place ?? '',
       ),
     ),
     'keirin': CategoryHandler(
@@ -190,6 +201,7 @@ class _EditScreenState extends State<EditScreen> {
         betType: betType ?? '単勝',
         memo: memo,
         createdAt: createdAt,
+        place: place ?? '',
       ),
     ),
     'pachinko': CategoryHandler(
@@ -231,8 +243,8 @@ class _EditScreenState extends State<EditScreen> {
   late TextEditingController _amountController;
   late TextEditingController _memoController;
   final List<TextEditingController> _memberControllers = [];
-  late TextEditingController _placeController;
-  late TextEditingController _machineController;
+  String _placeValue = '';
+  String _machineValue = '';
 
   // Mahjong specific
   String? _mahjongType;
@@ -286,16 +298,17 @@ class _EditScreenState extends State<EditScreen> {
       }
     }
 
+    // Init Place (all categories)
+    _placeValue = widget.result?.place ?? '';
+
     // Init Pachinko
     if (widget.result is PachinkoResult) {
       final res = widget.result as PachinkoResult;
       _pachinkoType = res.type;
       _initMemberControllers(res.member);
-      _placeController = TextEditingController(text: res.place);
-      _machineController = TextEditingController(text: res.machine);
+      _machineValue = res.machine;
     } else {
-      _placeController = TextEditingController();
-      _machineController = TextEditingController();
+      _machineValue = '';
     }
   }
 
@@ -317,8 +330,6 @@ class _EditScreenState extends State<EditScreen> {
     for (var controller in _memberControllers) {
       controller.dispose();
     }
-    _placeController.dispose();
-    _machineController.dispose();
     super.dispose();
   }
 
@@ -371,10 +382,9 @@ class _EditScreenState extends State<EditScreen> {
                       _pachinkoType == '乗り打ち'))
               ? memberList
               : null,
-          place:
-              widget.categoryType == 'pachinko' ? _placeController.text : null,
+          place: _placeValue,
           machine: widget.categoryType == 'pachinko'
-              ? _machineController.text
+              ? _machineValue
               : null,
         );
 
@@ -524,38 +534,46 @@ class _EditScreenState extends State<EditScreen> {
                     _buildMemberInput(),
                   ],
                   const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _placeController,
-                    decoration: const InputDecoration(
-                      labelText: '場所',
-                    ),
-                    validator: (v) {
-                      if (v == null || v.isEmpty) {
-                        return '場所を入力してください';
-                      }
-                      return null;
-                    },
-                  ),
                   const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _machineController,
-                    decoration: const InputDecoration(
-                      labelText: '台の種類',
-                    ),
-                    validator: (v) {
-                      if (v == null || v.isEmpty) {
-                        return '台の種類を入力してください';
-                      }
-                      return null;
-                    },
+                  StreamBuilder<List<MachineType>>(
+                    stream: _machineTypeService.getMachineTypes(),
+                    builder: (context, snapshot) {
+                      final machines = snapshot.data ?? [];
+                      return CreatableAutocomplete<MachineType>(
+                        options: machines,
+                        displayStringForOption: (m) => m.name,
+                        labelText: '台の種類',
+                        initialValue: _machineValue,
+                        onChanged: (v) => _machineValue = v,
+                        onCreate: (name) => _machineTypeService.addMachineType(MachineType(name: name, createdAt: DateTime.now())),
+                        onEdit: (machine, newName) => _machineTypeService.updateMachineType(MachineType(id: machine.id, name: newName, createdAt: machine.createdAt)),
+                        onDelete: (machine) => _machineTypeService.deleteMachineType(machine.id!),
+                      );
+                    }
                   ),
                 ],
 
+                StreamBuilder<List<Place>>(
+                  stream: _placeService.getPlaces('mahjong'),
+                  builder: (context, snapshot) {
+                    final places = snapshot.data ?? [];
+                    return CreatableAutocomplete<Place>(
+                      options: places,
+                      displayStringForOption: (p) => p.name,
+                      labelText: '場所',
+                      initialValue: _placeValue,
+                      onChanged: (v) => _placeValue = v,
+                      onCreate: (name) => _placeService.addPlace(Place(name: name, category: 'mahjong', createdAt: DateTime.now())),
+                      onEdit: (place, newName) => _placeService.updatePlace(Place(id: place.id, name: newName, category: 'mahjong', createdAt: place.createdAt)),
+                      onDelete: (place) => _placeService.deletePlace(place.id!),
+                    );
+                  }
+                ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _memoController,
                   decoration: const InputDecoration(
-                    labelText: 'メモ (場所など)',
+                    labelText: 'メモ',
                   ),
                 ),
                 const SizedBox(height: 32),

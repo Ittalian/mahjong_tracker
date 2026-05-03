@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../models/mahjong_result.dart';
+import '../models/pachinko_result.dart';
 import '../models/horse_racing_result.dart';
 import '../models/boat_racing_result.dart';
 import '../models/auto_racing_result.dart';
@@ -27,19 +29,39 @@ class ResultCard extends StatelessWidget {
         '${isPositive ? '+' : ''}${currencyFormatter.format(result.amount)}';
 
     String? betType;
-    if (result is HorseRacingResult) {
+    String? place;
+    String? typeOrMachine;
+
+    if (result is MahjongResult) {
+      place = result.place;
+      typeOrMachine = result.type;
+    } else if (result is PachinkoResult) {
+      place = result.place;
+      typeOrMachine = result.machine;
+    } else if (result is HorseRacingResult) {
       betType = result.betType;
+      place = result.place;
     } else if (result is BoatRacingResult) {
       betType = result.betType;
+      place = result.place;
     } else if (result is AutoRacingResult) {
       betType = result.betType;
+      place = result.place;
     } else if (result is KeirinResult) {
       betType = result.betType;
+      place = result.place;
     }
+
+    final bool hasBadges = (place != null && place.isNotEmpty) ||
+                           (typeOrMachine != null && typeOrMachine.isNotEmpty) ||
+                           (betType != null && betType.isNotEmpty);
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
+        borderRadius: BorderRadius.circular(12),
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -52,29 +74,47 @@ class ResultCard extends StatelessWidget {
                   children: [
                     Text(
                       formattedDate,
-                      style: Theme.of(context).textTheme.bodySmall,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
                     ),
-                    const SizedBox(height: 4),
-                    if (betType != null && betType.isNotEmpty) ...[
-                      Text(
-                        betType,
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodyMedium
-                            ?.copyWith(fontWeight: FontWeight.bold),
+                    if (hasBadges) ...[
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8.0,
+                        runSpacing: 4.0,
+                        children: [
+                          if (place != null && place.isNotEmpty)
+                            _buildBadge(context, Icons.place, place),
+                          if (typeOrMachine != null && typeOrMachine.isNotEmpty)
+                            _buildBadge(context, Icons.category, typeOrMachine),
+                          if (betType != null && betType.isNotEmpty)
+                            _buildBadge(context, Icons.confirmation_number, betType),
+                        ],
                       ),
-                      const SizedBox(height: 2),
                     ],
-                    if (result.memo.isNotEmpty)
-                      Text(
-                        result.memo,
-                        style: Theme.of(context).textTheme.bodyMedium,
+                    if (result.memo.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(Icons.notes, size: 14, color: Colors.grey.shade600),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              result.memo,
+                              style: Theme.of(context).textTheme.bodyMedium,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
                       ),
+                    ],
                   ],
                 ),
               ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
+              const SizedBox(width: 16),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
                     amountText,
@@ -83,16 +123,46 @@ class ResultCard extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                         ),
                   ),
-                  const SizedBox(width: 8),
                   IconButton(
-                    icon: const Icon(Icons.delete, color: Colors.grey),
+                    icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
                     onPressed: onDelete,
+                    constraints: const BoxConstraints(),
+                    padding: const EdgeInsets.only(top: 8.0),
                   ),
                 ],
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildBadge(BuildContext context, IconData icon, String label) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+      decoration: BoxDecoration(
+        color: Theme.of(context).primaryColor.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8.0),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: Theme.of(context).primaryColor),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 12,
+                color: Theme.of(context).primaryColor,
+                fontWeight: FontWeight.bold,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
       ),
     );
   }

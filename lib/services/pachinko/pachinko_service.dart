@@ -37,4 +37,30 @@ class PachinkoService implements FirestoreService<PachinkoResult> {
   Future<void> deleteResult(String id) async {
     await _firestore.collection(_collectionName).doc(id).delete();
   }
+
+  Future<void> updatePlaceNames(String oldName, String newName) async {
+    final snapshot = await _firestore
+        .collection(_collectionName)
+        .where('place', isEqualTo: oldName)
+        .get();
+        
+    final batch = _firestore.batch();
+    for (var doc in snapshot.docs) {
+      batch.update(doc.reference, {'place': newName});
+    }
+    await batch.commit();
+  }
+
+  Future<void> updateMachineNames(String oldName, String newName) async {
+    final snapshot = await _firestore
+        .collection(_collectionName)
+        .where('machine', isEqualTo: oldName)
+        .get();
+        
+    final batch = _firestore.batch();
+    for (var doc in snapshot.docs) {
+      batch.update(doc.reference, {'machine': newName});
+    }
+    await batch.commit();
+  }
 }

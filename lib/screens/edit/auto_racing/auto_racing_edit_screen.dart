@@ -21,6 +21,14 @@ class _AutoRacingEditScreenState
   String _betType = '単勝';
 
   @override
+  String get categoryType => 'auto_racing';
+
+  @override
+  Future<void> updatePlaceNameInResults(String oldName, String newName) async {
+    await _autoRacingService.updatePlaceNames(oldName, newName);
+  }
+
+  @override
   void initCategorySpecificFields() {
     if (widget.result is AutoRacingResult) {
       _betType = (widget.result as AutoRacingResult).betType;
@@ -59,6 +67,7 @@ class _AutoRacingEditScreenState
           betType: _betType,
           memo: memo,
           createdAt: widget.result?.createdAt ?? DateTime.now(),
+          place: placeValue,
         );
 
         if (widget.result == null) {
@@ -68,6 +77,7 @@ class _AutoRacingEditScreenState
         }
 
         if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('保存しました')));
           Navigator.pop(context);
         }
       } catch (e) {
