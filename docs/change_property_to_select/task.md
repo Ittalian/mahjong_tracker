@@ -1,0 +1,21 @@
+# Notion風セレクトUIとマスター管理の実装タスク
+
+- [x] マスターデータ用のモデルを作成
+  - `lib/models/place.dart`
+  - `lib/models/machine_type.dart`
+- [x] マスターデータ用のサービスを作成
+  - `lib/services/place_service.dart`
+  - `lib/services/machine_type_service.dart`
+- [x] 既存 Result モデルに `place` プロパティを追加
+  - `lib/models/mahjong_result.dart`
+  - `lib/models/horse_racing_result.dart`
+  - `lib/models/boat_racing_result.dart`
+  - `lib/models/auto_racing_result.dart`
+  - `lib/models/keirin_result.dart`
+- [x] Notion風のカスタムセレクトUI (`CreatableAutocomplete`) を作成
+  - 新規作成、編集、削除（ダイアログ付き）の機能実装
+- [x] `EditScreen` を改修
+  - 「場所」と「台の種類」のテキストフィールドを `CreatableAutocomplete` に置き換え
+  - 全てのカテゴリで「場所」を入力できるようにする
+  - メモ入力欄のラベルを「メモ」に変更
+- [x] 静的解析・ビルドエラーの解消と動作確認
