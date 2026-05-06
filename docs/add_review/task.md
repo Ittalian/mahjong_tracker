@@ -1,0 +1,26 @@
+# レビュー機能追加のタスクリスト
+
+- [x] 1. Firestoreデータモデルの作成
+  - [x] `PachinkoMachineReview` (パチンコ台)
+  - [x] `PachinkoPlaceReview` (パチンコ店舗)
+  - [x] `MahjongPlaceReview` (麻雀店舗)
+  - [x] `HorseReview` (競馬 馬)
+  - [x] `JockeyReview` (競馬 騎手)
+  - [x] `RacerReview` (競輪/競艇/オート 選手)
+- [x] 2. Firestoreサービス(CRUD)の作成
+  - [x] `ReviewService` の実装
+- [x] 3. 共通UIコンポーネントの作成
+  - [x] `StarRatingInput` ウィジェットの作成
+  - [ ] 並べ替え・絞り込み用ボトムシートの基本UI
+- [x] 4. レビューメイン画面の作成
+  - [x] `ReviewMainScreen` (タブ切り替えUI)
+- [x] 5. 各タブ・リストUIの作成とデータ連携
+  - [x] パチンコタブ (台/店舗、既存マスタ連携)
+  - [x] 麻雀タブ (店舗、既存マスタ連携)
+  - [x] 競馬タブ (馬/騎手、追加・削除機能)
+  - [x] 競輪/競艇/オートタブ (選手、追加・削除機能)
+- [x] 6. レビュー編集ダイアログ/画面の作成
+  - [x] 各種別ごとの入力UI
+- [x] 7. ホーム画面への導線追加
+  - [x] `HomeScreen`のAppBarにレビューボタンを設置
+- [x] 8. 動作確認・Lint修正
