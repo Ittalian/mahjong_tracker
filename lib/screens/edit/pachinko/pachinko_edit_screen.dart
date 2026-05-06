@@ -89,7 +89,6 @@ class _PachinkoEditScreenState extends BaseEditScreenState<PachinkoEditScreen> {
           builder: (context, snapshot) {
             final machines = snapshot.data ?? [];
             return CreatableAutocomplete<MachineType>(
-              key: ValueKey('machine_${machines.length}_${machines.hashCode}'),
               options: machines,
               displayStringForOption: (m) => m.name,
               labelText: '台の種類',

@@ -125,7 +125,6 @@ abstract class BaseEditScreenState<T extends BaseEditScreen> extends State<T> {
       builder: (context, snapshot) {
         final places = snapshot.data ?? [];
         return CreatableAutocomplete<Place>(
-          key: ValueKey('place_${places.length}_${places.hashCode}'),
           options: places,
           displayStringForOption: (p) => p.name,
           labelText: '場所',

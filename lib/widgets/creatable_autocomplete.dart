@@ -218,7 +218,7 @@ class _CreatableAutocompleteState<T extends Object> extends State<CreatableAutoc
             elevation: 4.0,
             child: ConstrainedBox(
               constraints: BoxConstraints(
-                maxHeight: 250,
+                maxHeight: 150,
                 maxWidth: MediaQuery.of(context).size.width - 32, // パディング考慮
               ),
               child: ListView.builder(

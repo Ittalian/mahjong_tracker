@@ -327,6 +327,7 @@ class _CategoryViewState extends State<CategoryView> {
                   ],
                 ),
               ),
+            const SizedBox(height: 8),
             Expanded(
               child: results.isEmpty
                   ? const Center(child: Text('データがありません'))

@@ -8,6 +8,10 @@ import 'package:mahjong_tracker/services/keirin/keirin_service.dart';
 import 'package:mahjong_tracker/services/pachinko/pachinko_service.dart';
 import '../widgets/category_view.dart';
 import 'package:mahjong_tracker/screens/routers/edit_screen_router.dart';
+import 'package:mahjong_tracker/screens/review/review_pachinko_tab.dart';
+import 'package:mahjong_tracker/screens/review/review_mahjong_tab.dart';
+import 'package:mahjong_tracker/screens/review/review_horse_racing_tab.dart';
+import 'package:mahjong_tracker/screens/review/review_racer_tab.dart';
 import 'summary_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -205,6 +209,45 @@ class _HomeScreenState extends State<HomeScreen> {
     ];
 
     return Scaffold(
+      appBar: AppBar(
+        title: const Text('ギャンブル収支'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.star, color: Colors.amber),
+            tooltip: 'レビュー',
+            onPressed: () {
+              if (_currentIndex >= _categories.length) return; // 合計タブの場合は何もしない
+              
+              final currentType = _categories[_currentIndex]['type'];
+              Widget reviewScreen;
+              switch (currentType) {
+                case 'pachinko':
+                  reviewScreen = const ReviewPachinkoTab();
+                  break;
+                case 'mahjong':
+                  reviewScreen = const ReviewMahjongTab();
+                  break;
+                case 'horse_racing':
+                  reviewScreen = const ReviewHorseRacingTab();
+                  break;
+                case 'boat_racing':
+                case 'auto_racing':
+                case 'keirin':
+                  reviewScreen = ReviewRacerTab(category: currentType);
+                  break;
+                default:
+                  return;
+              }
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => reviewScreen,
+                ),
+              );
+            },
+          ),
+        ],
+      ),
       body: PageView(
         controller: _pageController,
         onPageChanged: _onPageChanged,
