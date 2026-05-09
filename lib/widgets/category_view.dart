@@ -360,83 +360,137 @@ class _CategoryViewState extends State<CategoryView> {
   }
 
   Widget _buildDetailedList(List<dynamic> results, NumberFormat formatter) {
-    final aggregated = GroupingHelper.aggregateResults(
-        results, widget.category['type'], _selectedGroupProperty!,
-        dateUnit: _selectedDateUnit);
+    return FutureBuilder<List<Map<String, dynamic>>>(
+      future: GroupingHelper.aggregateResultsAsync(
+          results, widget.category['type'], _selectedGroupProperty!,
+          dateUnit: _selectedDateUnit),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(child: Text('エラーが発生しました: ${snapshot.error}'));
+        }
+        final aggregated = snapshot.data ?? [];
+        if (aggregated.isEmpty) {
+          return const Center(child: Text('データがありません'));
+        }
 
-    return ListView.builder(
-      itemCount: aggregated.length,
-      itemBuilder: (context, index) {
-        final item = aggregated[index];
-        final amount = item['amount'] as int;
-        return InkWell(
-          onTap: () {
-            setState(() {
-              _selectedGroupValue = item['name'];
-            });
-          },
-          child: Card(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: ListTile(
-              title: Text(item['name']),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    '${amount >= 0 ? '+' : ''}${formatter.format(amount)}',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: amount >= 0 ? Colors.green : Colors.red,
-                    ),
+        return ListView.builder(
+          itemCount: aggregated.length,
+          itemBuilder: (context, index) {
+            final item = aggregated[index];
+            final amount = item['amount'] as int;
+            return InkWell(
+              onTap: () {
+                setState(() {
+                  _selectedGroupValue = item['name'];
+                });
+              },
+              child: Card(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: ListTile(
+                  title: Text(item['name']),
+                  subtitle: item['type'] != null
+                      ? Text(
+                          item['type'] as String,
+                          style: TextStyle(
+                              color: item['type'] == '三麻'
+                                  ? Colors.orange.shade700
+                                  : Colors.blue.shade700,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12),
+                        )
+                      : null,
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '${amount >= 0 ? '+' : ''}${formatter.format(amount)}',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: amount >= 0 ? Colors.green : Colors.red,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );
   }
 
   Widget _buildFilteredList(List<dynamic> results) {
-    final filtered = GroupingHelper.filterResults(results,
-        widget.category['type'], _selectedGroupProperty!, _selectedGroupValue!,
-        dateUnit: _selectedDateUnit);
+    return FutureBuilder<List<dynamic>>(
+      future: GroupingHelper.filterResultsAsync(results,
+          widget.category['type'], _selectedGroupProperty!, _selectedGroupValue!,
+          dateUnit: _selectedDateUnit),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Center(child: Text('エラーが発生しました: ${snapshot.error}'));
+        }
+        final filtered = snapshot.data ?? [];
 
-    if (filtered.isEmpty) {
-      return const Center(child: Text('データがありません'));
-    }
+        if (filtered.isEmpty) {
+          return const Center(child: Text('データがありません'));
+        }
 
-    return ListView.builder(
-      itemCount: filtered.length,
-      itemBuilder: (context, index) {
-        final result = filtered[index];
-        return ResultCard(
-          result: result,
-          onTap: () => widget.onEdit(result),
-          onDelete: () => widget.onDelete(result),
+        return ListView.builder(
+          itemCount: filtered.length,
+          itemBuilder: (context, index) {
+            final result = filtered[index];
+            return ResultCard(
+              result: result,
+              onTap: () => widget.onEdit(result),
+              onDelete: () => widget.onDelete(result),
+            );
+          },
         );
       },
     );
   }
 
   /// グラフ画面を表示
-  void _showChartScreen(BuildContext context, List<dynamic> results) {
-    final aggregated = GroupingHelper.aggregateResults(
-        results, widget.category['type'], _selectedGroupProperty!,
-        dateUnit: _selectedDateUnit);
-
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ChartScreen(
-          title:
-              '${widget.category['display_name']} - ${GroupingHelper.getPropertyLabel(_selectedGroupProperty!)}',
-          data: aggregated,
-        ),
-      ),
+  Future<void> _showChartScreen(BuildContext context, List<dynamic> results) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
     );
+
+    try {
+      final aggregated = await GroupingHelper.aggregateResultsAsync(
+          results, widget.category['type'], _selectedGroupProperty!,
+          dateUnit: _selectedDateUnit);
+      
+      if (context.mounted) {
+        Navigator.pop(context); // Close dialog
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ChartScreen(
+              title:
+                  '${widget.category['display_name']} - ${GroupingHelper.getPropertyLabel(_selectedGroupProperty!)}',
+              data: aggregated,
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        Navigator.pop(context); // Close dialog
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('エラーが発生しました: $e')),
+        );
+      }
+    }
   }
 
   void _showFilterBottomSheet(BuildContext context) {

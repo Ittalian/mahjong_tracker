@@ -5,6 +5,10 @@ import 'package:mahjong_tracker/models/auto_racing_result.dart';
 import 'package:mahjong_tracker/models/keirin_result.dart';
 import 'package:mahjong_tracker/models/pachinko_result.dart';
 import 'package:mahjong_tracker/models/slot_result.dart';
+import 'package:mahjong_tracker/models/mahjong_group.dart';
+import 'package:mahjong_tracker/models/pachinko_group.dart';
+import 'package:mahjong_tracker/services/mahjong/mahjong_group_service.dart';
+import 'package:mahjong_tracker/services/pachinko/pachinko_group_service.dart';
 import 'package:intl/intl.dart';
 
 class GroupingHelper {
@@ -62,6 +66,78 @@ class GroupingHelper {
     return aggregated;
   }
 
+  static Future<List<Map<String, dynamic>>> aggregateResultsAsync(
+      List<dynamic> results, String categoryType, String property,
+      {String dateUnit = 'year'}) async {
+    if (property != 'group') {
+      return aggregateResults(results, categoryType, property, dateUnit: dateUnit);
+    }
+    if (results.isEmpty) return [];
+
+    final Map<String, Map<String, dynamic>> groupsMap = {};
+
+    List<MahjongGroup> mahjongGroups = [];
+    List<PachinkoGroup> pachinkoGroups = [];
+    
+    if (categoryType == 'mahjong') {
+      mahjongGroups = await MahjongGroupService().getGroups().first;
+    } else if (categoryType == 'pachinko' || categoryType == 'slot') {
+      pachinkoGroups = await PachinkoGroupService().getGroups().first;
+    }
+
+    for (var result in results) {
+      List<String> members = [];
+      if (result is MahjongResult) {
+        members = result.member;
+      } else if (result is PachinkoResult) {
+        members = result.member;
+      } else if (result is SlotResult) {
+        members = result.member;
+      }
+
+      if (members.isNotEmpty) {
+        final sortedMembers = List<String>.from(members)..sort();
+        String membersJoined = sortedMembers.join(',');
+        String? groupName;
+        String? groupType;
+
+        if (categoryType == 'mahjong') {
+          for (var g in mahjongGroups) {
+            final gSorted = List<String>.from(g.members)..sort();
+            if (gSorted.join(',') == membersJoined) {
+              groupName = g.name;
+              groupType = g.type;
+              break;
+            }
+          }
+        } else {
+          for (var g in pachinkoGroups) {
+            final gSorted = List<String>.from(g.members)..sort();
+            if (gSorted.join(',') == membersJoined) {
+              groupName = g.name;
+              break;
+            }
+          }
+        }
+
+        if (groupName != null) {
+          if (!groupsMap.containsKey(groupName)) {
+            groupsMap[groupName] = {'amount': 0, 'type': groupType};
+          }
+          groupsMap[groupName]!['amount'] = (groupsMap[groupName]!['amount'] as int) + (result.amount as int);
+        }
+      }
+    }
+
+    final List<Map<String, dynamic>> aggregated = groupsMap.entries.map((e) {
+      return {'name': e.key, 'amount': e.value['amount'], 'type': e.value['type']};
+    }).toList();
+
+    aggregated.sort((a, b) => (b['amount'] as int).compareTo(a['amount'] as int));
+
+    return aggregated;
+  }
+
   static List<dynamic> filterResults(List<dynamic> results, String categoryType,
       String property, String value,
       {String dateUnit = 'year'}) {
@@ -91,6 +167,61 @@ class GroupingHelper {
       } else {
         return getPropertyValue(result, categoryType, property) == value;
       }
+    }).toList();
+  }
+
+  static Future<List<dynamic>> filterResultsAsync(List<dynamic> results, String categoryType,
+      String property, String value,
+      {String dateUnit = 'year'}) async {
+    if (property != 'group') {
+      return filterResults(results, categoryType, property, value, dateUnit: dateUnit);
+    }
+    if (results.isEmpty) return [];
+
+    List<MahjongGroup> mahjongGroups = [];
+    List<PachinkoGroup> pachinkoGroups = [];
+    
+    if (categoryType == 'mahjong') {
+      mahjongGroups = await MahjongGroupService().getGroups().first;
+    } else if (categoryType == 'pachinko' || categoryType == 'slot') {
+      pachinkoGroups = await PachinkoGroupService().getGroups().first;
+    }
+
+    return results.where((result) {
+      List<String> members = [];
+      if (result is MahjongResult) {
+        members = result.member;
+      } else if (result is PachinkoResult) {
+        members = result.member;
+      } else if (result is SlotResult) {
+        members = result.member;
+      }
+
+      if (members.isNotEmpty) {
+        final sortedMembers = List<String>.from(members)..sort();
+        String membersJoined = sortedMembers.join(',');
+        String? groupName;
+
+        if (categoryType == 'mahjong') {
+          for (var g in mahjongGroups) {
+            final gSorted = List<String>.from(g.members)..sort();
+            if (gSorted.join(',') == membersJoined) {
+              groupName = g.name;
+              break;
+            }
+          }
+        } else {
+          for (var g in pachinkoGroups) {
+            final gSorted = List<String>.from(g.members)..sort();
+            if (gSorted.join(',') == membersJoined) {
+              groupName = g.name;
+              break;
+            }
+          }
+        }
+        return groupName == value;
+      }
+      return false;
     }).toList();
   }
 
@@ -198,16 +329,16 @@ class GroupingHelper {
   static List<String> getGroupableProperties(String categoryType) {
     switch (categoryType) {
       case 'mahjong':
-        return ['type', 'umaRate', 'priceRate', 'chipRate', 'member', 'place', 'date'];
+        return ['type', 'umaRate', 'priceRate', 'chipRate', 'member', 'group', 'place', 'date'];
       case 'horse_racing':
       case 'boat_racing':
       case 'auto_racing':
       case 'keirin':
         return ['betType', 'place', 'date'];
       case 'pachinko':
-        return ['type', 'member', 'place', 'machine', 'date'];
+        return ['type', 'member', 'group', 'place', 'machine', 'date'];
       case 'slot':
-        return ['member', 'place', 'machine', 'expectedSetting', 'date'];
+        return ['member', 'group', 'place', 'machine', 'expectedSetting', 'date'];
       default:
         return [];
     }
@@ -224,7 +355,9 @@ class GroupingHelper {
       case 'chipRate':
         return 'チップ';
       case 'member':
-        return 'メンバー';
+        return '個人';
+      case 'group':
+        return 'グループ';
       case 'betType':
         return '賭け方';
       case 'place':
