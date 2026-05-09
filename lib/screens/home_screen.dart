@@ -15,9 +15,8 @@ import 'package:mahjong_tracker/screens/review/review_mahjong_tab.dart';
 import 'package:mahjong_tracker/screens/review/review_horse_racing_tab.dart';
 import 'package:mahjong_tracker/screens/review/review_racer_tab.dart';
 import 'package:mahjong_tracker/screens/edit/majong/mahjong_group_edit_screen.dart';
+import 'package:mahjong_tracker/screens/edit/pachinko/pachinko_group_edit_screen.dart';
 import 'summary_screen.dart';
-
-
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -300,9 +299,26 @@ class _HomeScreenState extends State<HomeScreen> {
                       );
                     },
                     tooltip: 'グループ管理',
-                    child: const Icon(Icons.group),
+                    backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                    child: const Icon(Icons.groups),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 16),
+                ] else if (_categories[_currentIndex]['type'] == 'pachinko' || _categories[_currentIndex]['type'] == 'slot') ...[
+                  FloatingActionButton(
+                    heroTag: 'fab_group_pachinko',
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const PachinkoGroupListScreen(),
+                        ),
+                      );
+                    },
+                    tooltip: 'グループ管理',
+                    backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                    child: const Icon(Icons.groups),
+                  ),
+                  const SizedBox(width: 16),
                 ],
                 FloatingActionButton(
                   heroTag: 'fab_add',

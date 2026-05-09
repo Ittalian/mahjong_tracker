@@ -63,4 +63,21 @@ class SlotService implements FirestoreService<SlotResult> {
     }
     await batch.commit();
   }
+
+  /// 過去の全収支から重複なしのメンバー名一覧を返す
+  Stream<List<String>> getUniqueMembers() {
+    return _firestore
+        .collection(_collectionName)
+        .snapshots()
+        .map((snapshot) {
+      final names = <String>{};
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+        final members = List<String>.from(data['member'] ?? []);
+        names.addAll(members.where((m) => m.trim().isNotEmpty));
+      }
+      final sorted = names.toList()..sort();
+      return sorted;
+    });
+  }
 }
