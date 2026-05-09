@@ -12,6 +12,7 @@ import 'package:mahjong_tracker/screens/review/review_pachinko_tab.dart';
 import 'package:mahjong_tracker/screens/review/review_mahjong_tab.dart';
 import 'package:mahjong_tracker/screens/review/review_horse_racing_tab.dart';
 import 'package:mahjong_tracker/screens/review/review_racer_tab.dart';
+import 'package:mahjong_tracker/screens/edit/majong/mahjong_group_edit_screen.dart';
 import 'summary_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -160,7 +161,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('削除確認'),
-        content: const Text('この記録を削除してもよろしいですか？'),
+        content: const Text('この記録を削除しますか？'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -261,10 +262,34 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       floatingActionButton: _currentIndex < _categories.length
-          ? FloatingActionButton(
-              onPressed: () => _navigateToEditScreen(context),
-              tooltip: '収支を追加',
-              child: const Icon(Icons.add),
+          ? Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 麻雀タブのみグループ管理ボタンを表示
+                if (_categories[_currentIndex]['type'] == 'mahjong') ...[  
+                  FloatingActionButton(
+                    heroTag: 'fab_group',
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const MahjongGroupListScreen(),
+                        ),
+                      );
+                    },
+                    tooltip: 'グループ管理',
+                    child: const Icon(Icons.group),
+                  ),
+                  const SizedBox(width: 12),
+                ],
+                FloatingActionButton(
+                  heroTag: 'fab_add',
+                  onPressed: () => _navigateToEditScreen(context),
+                  tooltip: '収支を追加',
+                  child: const Icon(Icons.add),
+                ),
+              ],
             )
           : null,
       bottomNavigationBar: BottomNavigationBar(
