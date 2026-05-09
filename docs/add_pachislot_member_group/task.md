@@ -1,0 +1,9 @@
+- `[x]` `PachinkoGroup` モデルの作成
+- `[x]` `PachinkoGroupService` の作成
+- `[x]` `PachinkoService` および `SlotService` に `getUniqueMembers()` メソッドを追加
+- `[x]` パチンコ・スロットのメンバーを統合する `GambleMemberService` (またはRxストリーム) の作成
+- `[x]` `PachinkoGroupEditScreen`（グループ管理画面）の作成
+- `[x]` `PachinkoEditScreen` へのグループ追加UIと自動判定ロジックの実装
+- `[x]` `SlotEditScreen` へのグループ追加UIと自動判定ロジックの実装
+- `[x]` `HomeScreen` の「パチ」「スロ」タブにグループ管理ボタンを追加
+- `[x]` 動作確認と Walkthrough の作成
