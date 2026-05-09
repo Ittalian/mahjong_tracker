@@ -7,6 +7,7 @@ import 'package:mahjong_tracker/services/boat_racing/boat_racing_service.dart';
 import 'package:mahjong_tracker/services/auto_racing/auto_racing_service.dart';
 import 'package:mahjong_tracker/services/keirin/keirin_service.dart';
 import 'package:mahjong_tracker/services/pachinko/pachinko_service.dart';
+import 'package:mahjong_tracker/services/slot/slot_service.dart';
 
 class SummaryScreen extends StatelessWidget {
   final Function(int)? onNavigateToCategory;
@@ -31,6 +32,7 @@ class SummaryScreen extends StatelessWidget {
     final autoStream = _getTotal(AutoRacingService().getResults());
     final keirinStream = _getTotal(KeirinService().getResults());
     final pachinkoStream = _getTotal(PachinkoService().getResults());
+    final slotStream = _getTotal(SlotService().getResults());
 
     return StreamBuilder<List<int>>(
       stream: CombineLatestStream.list([
@@ -40,6 +42,7 @@ class SummaryScreen extends StatelessWidget {
         autoStream,
         keirinStream,
         pachinkoStream,
+        slotStream,
       ]),
       builder: (context, snapshot) {
         if (snapshot.hasError) {
@@ -57,13 +60,15 @@ class SummaryScreen extends StatelessWidget {
         final autoTotal = totals[3];
         final keirinTotal = totals[4];
         final pachinkoTotal = totals[5];
+        final slotTotal = totals[6];
 
         final grandTotal = mahjongTotal +
             horseTotal +
             boatTotal +
             autoTotal +
             keirinTotal +
-            pachinkoTotal;
+            pachinkoTotal +
+            slotTotal;
 
         final categories = [
           { 'label': '麻雀', 'total': mahjongTotal, 'icon': Icons.casino },
@@ -72,6 +77,7 @@ class SummaryScreen extends StatelessWidget {
           { 'label': 'オートレース', 'total': autoTotal, 'icon': Icons.motorcycle },
           { 'label': '競輪', 'total': keirinTotal, 'icon': Icons.directions_bike },
           { 'label': 'パチンコ', 'total': pachinkoTotal, 'icon': Icons.videogame_asset },
+          { 'label': 'スロット', 'total': slotTotal, 'icon': Icons.casino_outlined },
         ];
 
         return Column(

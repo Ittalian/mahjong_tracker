@@ -1,0 +1,66 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:mahjong_tracker/models/slot_result.dart';
+import 'package:mahjong_tracker/services/firestore_service.dart';
+
+class SlotService implements FirestoreService<SlotResult> {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  static const String _collectionName = 'slot_results';
+
+  @override
+  Future<void> addResult(SlotResult result) async {
+    await _firestore.collection(_collectionName).add(result.toMap());
+  }
+
+  @override
+  Stream<List<SlotResult>> getResults() {
+    return _firestore
+        .collection(_collectionName)
+        .orderBy('date', descending: true)
+        .snapshots()
+        .map((snapshot) {
+      return snapshot.docs
+          .map((doc) => SlotResult.fromFirestore(doc))
+          .toList();
+    });
+  }
+
+  @override
+  Future<void> updateResult(SlotResult result) async {
+    final id = result.id;
+    if (id == null || id.isEmpty) return;
+
+    await _firestore.collection(_collectionName).doc(id).update(result.toMap());
+  }
+
+  @override
+  Future<void> deleteResult(String id) async {
+    await _firestore.collection(_collectionName).doc(id).delete();
+  }
+
+  Future<void> updatePlaceNames(String oldName, String newName) async {
+    final snapshot = await _firestore
+        .collection(_collectionName)
+        .where('place', isEqualTo: oldName)
+        .get();
+
+    final batch = _firestore.batch();
+    for (var doc in snapshot.docs) {
+      batch.update(doc.reference, {'place': newName});
+    }
+    await batch.commit();
+  }
+
+  Future<void> updateMachineNames(String oldName, String newName) async {
+    final snapshot = await _firestore
+        .collection(_collectionName)
+        .where('machine', isEqualTo: oldName)
+        .get();
+
+    final batch = _firestore.batch();
+    for (var doc in snapshot.docs) {
+      batch.update(doc.reference, {'machine': newName});
+    }
+    await batch.commit();
+  }
+}

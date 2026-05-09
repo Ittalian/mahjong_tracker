@@ -5,6 +5,7 @@ import 'package:mahjong_tracker/screens/edit/boat_racing/boat_racing_edit_screen
 import 'package:mahjong_tracker/screens/edit/auto_racing/auto_racing_edit_screen.dart';
 import 'package:mahjong_tracker/screens/edit/keirin/keirin_edit_screen.dart';
 import 'package:mahjong_tracker/screens/edit/pachinko/pachinko_edit_screen.dart';
+import 'package:mahjong_tracker/screens/edit/slot/slot_edit_screen.dart';
 
 /// 競技タイプに基づいて適切な編集画面を返すルーター関数
 Widget getEditScreenForCategory({
@@ -24,7 +25,10 @@ Widget getEditScreenForCategory({
       return KeirinEditScreen(result: result);
     case 'pachinko':
       return PachinkoEditScreen(result: result);
+    case 'slot':
+      return SlotEditScreen(result: result);
     default:
       throw Exception('Unknown category type: $categoryType');
   }
 }
+

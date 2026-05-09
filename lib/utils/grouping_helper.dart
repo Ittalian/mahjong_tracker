@@ -4,22 +4,28 @@ import 'package:mahjong_tracker/models/boat_racing_result.dart';
 import 'package:mahjong_tracker/models/auto_racing_result.dart';
 import 'package:mahjong_tracker/models/keirin_result.dart';
 import 'package:mahjong_tracker/models/pachinko_result.dart';
+import 'package:mahjong_tracker/models/slot_result.dart';
 import 'package:intl/intl.dart';
 
 class GroupingHelper {
   static List<Map<String, dynamic>> aggregateResults(
-      List<dynamic> results, String categoryType, String property, {String dateUnit = 'year'}) {
+      List<dynamic> results, String categoryType, String property,
+      {String dateUnit = 'year'}) {
     if (results.isEmpty) return [];
 
     final Map<String, int> groups = {};
 
     for (var result in results) {
       if (property == 'member' &&
-          (categoryType == 'mahjong' || categoryType == 'pachinko')) {
+          (categoryType == 'mahjong' ||
+              categoryType == 'pachinko' ||
+              categoryType == 'slot')) {
         List<String> members = [];
         if (result is MahjongResult) {
           members = result.member;
         } else if (result is PachinkoResult) {
+          members = result.member;
+        } else if (result is SlotResult) {
           members = result.member;
         }
 
@@ -46,7 +52,8 @@ class GroupingHelper {
 
     // Sort by amount descending (optional, but usually nice)
     if (property == 'date') {
-      aggregated.sort((a, b) => (b['name'] as String).compareTo(a['name'] as String));
+      aggregated.sort(
+          (a, b) => (b['name'] as String).compareTo(a['name'] as String));
     } else {
       aggregated
           .sort((a, b) => (b['amount'] as int).compareTo(a['amount'] as int));
@@ -56,16 +63,21 @@ class GroupingHelper {
   }
 
   static List<dynamic> filterResults(List<dynamic> results, String categoryType,
-      String property, String value, {String dateUnit = 'year'}) {
+      String property, String value,
+      {String dateUnit = 'year'}) {
     if (results.isEmpty) return [];
 
     return results.where((result) {
       if (property == 'member' &&
-          (categoryType == 'mahjong' || categoryType == 'pachinko')) {
+          (categoryType == 'mahjong' ||
+              categoryType == 'pachinko' ||
+              categoryType == 'slot')) {
         List<String> members = [];
         if (result is MahjongResult) {
           members = result.member;
         } else if (result is PachinkoResult) {
+          members = result.member;
+        } else if (result is SlotResult) {
           members = result.member;
         }
 
@@ -120,25 +132,33 @@ class GroupingHelper {
       case 'horse_racing':
         if (result is HorseRacingResult) {
           if (property == 'betType') return result.betType;
-          if (property == 'place') return result.place.isEmpty ? '未設定' : result.place;
+          if (property == 'place') {
+            return result.place.isEmpty ? '未設定' : result.place;
+          }
         }
         break;
       case 'boat_racing':
         if (result is BoatRacingResult) {
           if (property == 'betType') return result.betType;
-          if (property == 'place') return result.place.isEmpty ? '未設定' : result.place;
+          if (property == 'place') {
+            return result.place.isEmpty ? '未設定' : result.place;
+          }
         }
         break;
       case 'auto_racing':
         if (result is AutoRacingResult) {
           if (property == 'betType') return result.betType;
-          if (property == 'place') return result.place.isEmpty ? '未設定' : result.place;
+          if (property == 'place') {
+            return result.place.isEmpty ? '未設定' : result.place;
+          }
         }
         break;
       case 'keirin':
         if (result is KeirinResult) {
           if (property == 'betType') return result.betType;
-          if (property == 'place') return result.place.isEmpty ? '未設定' : result.place;
+          if (property == 'place') {
+            return result.place.isEmpty ? '未設定' : result.place;
+          }
         }
         break;
       case 'pachinko':
@@ -150,6 +170,22 @@ class GroupingHelper {
               return result.place.isEmpty ? '未設定' : result.place;
             case 'machine':
               return result.machine.isEmpty ? '未設定' : result.machine;
+            default:
+              return '';
+          }
+        }
+        break;
+      case 'slot':
+        if (result is SlotResult) {
+          switch (property) {
+            case 'place':
+              return result.place.isEmpty ? '未設定' : result.place;
+            case 'machine':
+              return result.machine.isEmpty ? '未設定' : result.machine;
+            case 'expectedSetting':
+              return result.expectedSetting == 0
+                  ? '未設定'
+                  : '設定${result.expectedSetting}';
             default:
               return '';
           }
@@ -170,6 +206,8 @@ class GroupingHelper {
         return ['betType', 'place', 'date'];
       case 'pachinko':
         return ['type', 'member', 'place', 'machine', 'date'];
+      case 'slot':
+        return ['member', 'place', 'machine', 'expectedSetting', 'date'];
       default:
         return [];
     }
@@ -190,9 +228,11 @@ class GroupingHelper {
       case 'betType':
         return '賭け方';
       case 'place':
-        return '場所';
+        return '店舗';
       case 'machine':
-        return '機種';
+        return '台の種類';
+      case 'expectedSetting':
+        return '予想設定';
       case 'date':
         return '日付';
       default:

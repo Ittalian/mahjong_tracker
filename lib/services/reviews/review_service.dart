@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/reviews/pachinko_machine_review.dart';
 import '../../models/reviews/pachinko_place_review.dart';
+import '../../models/reviews/slot_machine_review.dart';
 import '../../models/reviews/mahjong_place_review.dart';
 import '../../models/reviews/horse_review.dart';
 import '../../models/reviews/jockey_review.dart';
@@ -116,4 +117,23 @@ class ReviewService {
   Future<void> deleteRacerReview(String id) async {
     await _firestore.collection('racer_reviews').doc(id).delete();
   }
+
+  // --- Slot Machine Review ---
+  Stream<List<SlotMachineReview>> getSlotMachineReviews() {
+    return _firestore.collection('slot_machine_reviews').snapshots().map(
+        (snapshot) => snapshot.docs.map((doc) => SlotMachineReview.fromFirestore(doc)).toList());
+  }
+
+  Future<void> saveSlotMachineReview(SlotMachineReview review) async {
+    if (review.id == null) {
+      await _firestore.collection('slot_machine_reviews').add(review.toMap());
+    } else {
+      await _firestore.collection('slot_machine_reviews').doc(review.id).update(review.toMap());
+    }
+  }
+
+  Future<void> deleteSlotMachineReview(String id) async {
+    await _firestore.collection('slot_machine_reviews').doc(id).delete();
+  }
 }
+

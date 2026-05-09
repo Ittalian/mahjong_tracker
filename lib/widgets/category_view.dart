@@ -5,6 +5,7 @@ import 'package:mahjong_tracker/screens/chart_screen.dart';
 import '../widgets/result_card.dart';
 import 'package:mahjong_tracker/models/mahjong_result.dart';
 import 'package:mahjong_tracker/models/pachinko_result.dart';
+import 'package:mahjong_tracker/models/slot_result.dart';
 
 class CategoryView extends StatefulWidget {
   final Map<String, dynamic> category;
@@ -105,11 +106,16 @@ class _CategoryViewState extends State<CategoryView> {
 
                 if (prop == 'member' &&
                     (widget.category['type'] == 'mahjong' ||
-                        widget.category['type'] == 'pachinko')) {
+                        widget.category['type'] == 'pachinko' ||
+                        widget.category['type'] == 'slot')) {
                   List<String> members = [];
-                  if (r is MahjongResult)
+                  if (r is MahjongResult) {
                     members = r.member;
-                  else if (r is PachinkoResult) members = r.member;
+                  } else if (r is PachinkoResult) {
+                    members = r.member;
+                  } else if (r is SlotResult) {
+                    members = r.member;
+                  }
 
                   if (members.isNotEmpty) {
                     propMatch = keywords.any((kw) => members.any(

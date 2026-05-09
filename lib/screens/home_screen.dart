@@ -6,14 +6,17 @@ import 'package:mahjong_tracker/services/boat_racing/boat_racing_service.dart';
 import 'package:mahjong_tracker/services/auto_racing/auto_racing_service.dart';
 import 'package:mahjong_tracker/services/keirin/keirin_service.dart';
 import 'package:mahjong_tracker/services/pachinko/pachinko_service.dart';
+import 'package:mahjong_tracker/services/slot/slot_service.dart';
 import '../widgets/category_view.dart';
 import 'package:mahjong_tracker/screens/routers/edit_screen_router.dart';
 import 'package:mahjong_tracker/screens/review/review_pachinko_tab.dart';
+import 'package:mahjong_tracker/screens/review/review_slot_tab.dart';
 import 'package:mahjong_tracker/screens/review/review_mahjong_tab.dart';
 import 'package:mahjong_tracker/screens/review/review_horse_racing_tab.dart';
 import 'package:mahjong_tracker/screens/review/review_racer_tab.dart';
 import 'package:mahjong_tracker/screens/edit/majong/mahjong_group_edit_screen.dart';
 import 'summary_screen.dart';
+
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -29,6 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final _autoRacingService = AutoRacingService();
   final _keirinService = KeirinService();
   final _pachinkoService = PachinkoService();
+  final _slotService = SlotService();
 
   int _currentIndex = 0;
   final PageController _pageController = PageController();
@@ -76,6 +80,13 @@ class _HomeScreenState extends State<HomeScreen> {
       'icon': Icons.videogame_asset,
       'type': 'pachinko'
     },
+    {
+      'id': 'slot',
+      'label': 'スロ',
+      'display_name': 'スロット',
+      'icon': Icons.casino_outlined,
+      'type': 'slot'
+    },
   ];
 
   late final Map<String, CategoryHandler> _handlers = {
@@ -120,6 +131,13 @@ class _HomeScreenState extends State<HomeScreen> {
       delete: (id) => _pachinkoService.deleteResult(id),
       add: (result) => _pachinkoService.addResult(result),
       update: (result) => _pachinkoService.updateResult(result),
+    ),
+    'slot': CategoryHandler(
+      streamGetter: () =>
+          _slotService.getResults().map((list) => list.cast<dynamic>()),
+      delete: (id) => _slotService.deleteResult(id),
+      add: (result) => _slotService.addResult(result),
+      update: (result) => _slotService.updateResult(result),
     ),
   };
 
@@ -224,6 +242,9 @@ class _HomeScreenState extends State<HomeScreen> {
               switch (currentType) {
                 case 'pachinko':
                   reviewScreen = const ReviewPachinkoTab();
+                  break;
+                case 'slot':
+                  reviewScreen = const ReviewSlotTab();
                   break;
                 case 'mahjong':
                   reviewScreen = const ReviewMahjongTab();

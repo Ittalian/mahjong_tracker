@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../models/mahjong_result.dart';
 import '../models/pachinko_result.dart';
+import '../models/slot_result.dart';
 import '../models/horse_racing_result.dart';
 import '../models/boat_racing_result.dart';
 import '../models/auto_racing_result.dart';
@@ -31,6 +32,7 @@ class ResultCard extends StatelessWidget {
     String? betType;
     String? place;
     String? typeOrMachine;
+    String? expectedSettingLabel; // スロット専用
 
     if (result is MahjongResult) {
       place = result.place;
@@ -38,6 +40,13 @@ class ResultCard extends StatelessWidget {
     } else if (result is PachinkoResult) {
       place = result.place;
       typeOrMachine = result.machine;
+    } else if (result is SlotResult) {
+      place = result.place;
+      typeOrMachine = result.machine;
+      final setting = result.expectedSetting as int;
+      if (setting > 0) {
+        expectedSettingLabel = '設定$setting';
+      }
     } else if (result is HorseRacingResult) {
       betType = result.betType;
       place = result.place;
@@ -53,8 +62,9 @@ class ResultCard extends StatelessWidget {
     }
 
     final bool hasBadges = (place != null && place.isNotEmpty) ||
-                           (typeOrMachine != null && typeOrMachine.isNotEmpty) ||
-                           (betType != null && betType.isNotEmpty);
+        (typeOrMachine != null && typeOrMachine.isNotEmpty) ||
+        (betType != null && betType.isNotEmpty) ||
+        (expectedSettingLabel != null);
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -74,7 +84,10 @@ class ResultCard extends StatelessWidget {
                   children: [
                     Text(
                       formattedDate,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(color: Colors.grey.shade600),
                     ),
                     if (hasBadges) ...[
                       const SizedBox(height: 8),
@@ -85,9 +98,14 @@ class ResultCard extends StatelessWidget {
                           if (place != null && place.isNotEmpty)
                             _buildBadge(context, Icons.place, place),
                           if (typeOrMachine != null && typeOrMachine.isNotEmpty)
-                            _buildBadge(context, Icons.category, typeOrMachine),
+                            _buildBadge(
+                                context, Icons.casino_outlined, typeOrMachine),
+                          if (expectedSettingLabel != null)
+                            _buildBadge(context, Icons.tune,
+                                expectedSettingLabel),
                           if (betType != null && betType.isNotEmpty)
-                            _buildBadge(context, Icons.confirmation_number, betType),
+                            _buildBadge(
+                                context, Icons.confirmation_number, betType),
                         ],
                       ),
                     ],
@@ -96,12 +114,14 @@ class ResultCard extends StatelessWidget {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.notes, size: 14, color: Colors.grey.shade600),
+                          Icon(Icons.notes,
+                              size: 14, color: Colors.grey.shade600),
                           const SizedBox(width: 4),
                           Expanded(
                             child: Text(
                               result.memo,
-                              style: Theme.of(context).textTheme.bodyMedium,
+                              style:
+                                  Theme.of(context).textTheme.bodyMedium,
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -124,7 +144,8 @@ class ResultCard extends StatelessWidget {
                         ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
+                    icon: const Icon(Icons.delete_outline,
+                        color: Colors.redAccent),
                     onPressed: onDelete,
                     constraints: const BoxConstraints(),
                     padding: const EdgeInsets.only(top: 8.0),
@@ -140,9 +161,10 @@ class ResultCard extends StatelessWidget {
 
   Widget _buildBadge(BuildContext context, IconData icon, String label) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+      padding:
+          const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
       decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor.withOpacity(0.1),
+        color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8.0),
       ),
       child: Row(
