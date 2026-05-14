@@ -69,12 +69,47 @@ class GroupingHelper {
   static Future<List<Map<String, dynamic>>> aggregateResultsAsync(
       List<dynamic> results, String categoryType, String property,
       {String dateUnit = 'year'}) async {
-    if (property != 'group') {
+    if (property != 'group' && property != 'compound') {
       return aggregateResults(results, categoryType, property, dateUnit: dateUnit);
     }
     if (results.isEmpty) return [];
 
     final Map<String, Map<String, dynamic>> groupsMap = {};
+
+    if (property == 'compound') {
+      for (var result in results) {
+        if (result is SlotResult) {
+          String place = result.place.isEmpty ? '未設定' : result.place;
+          String machine = result.machine.isEmpty ? '未設定' : result.machine;
+          String compoundKey = '$place × $machine';
+
+          if (!groupsMap.containsKey(compoundKey)) {
+            groupsMap[compoundKey] = {'amount': 0, 'totalGames': 0, 'rbCount': 0, 'bbCount': 0};
+          }
+          groupsMap[compoundKey]!['amount'] = (groupsMap[compoundKey]!['amount'] as int) + result.amount;
+          
+          // 未入力（全て0）のデータは計算から除外するため、いずれかが0より大きい場合のみ加算する
+          if (result.totalGames > 0 || result.rbCount > 0 || result.bbCount > 0) {
+            groupsMap[compoundKey]!['totalGames'] = (groupsMap[compoundKey]!['totalGames'] as int) + result.totalGames;
+            groupsMap[compoundKey]!['rbCount'] = (groupsMap[compoundKey]!['rbCount'] as int) + result.rbCount;
+            groupsMap[compoundKey]!['bbCount'] = (groupsMap[compoundKey]!['bbCount'] as int) + result.bbCount;
+          }
+        }
+      }
+
+      final List<Map<String, dynamic>> aggregated = groupsMap.entries.map((e) {
+        return {
+          'name': e.key,
+          'amount': e.value['amount'],
+          'totalGames': e.value['totalGames'],
+          'rbCount': e.value['rbCount'],
+          'bbCount': e.value['bbCount'],
+        };
+      }).toList();
+
+      aggregated.sort((a, b) => (b['amount'] as int).compareTo(a['amount'] as int));
+      return aggregated;
+    }
 
     List<MahjongGroup> mahjongGroups = [];
     List<PachinkoGroup> pachinkoGroups = [];
@@ -173,10 +208,22 @@ class GroupingHelper {
   static Future<List<dynamic>> filterResultsAsync(List<dynamic> results, String categoryType,
       String property, String value,
       {String dateUnit = 'year'}) async {
-    if (property != 'group') {
+    if (property != 'group' && property != 'compound') {
       return filterResults(results, categoryType, property, value, dateUnit: dateUnit);
     }
     if (results.isEmpty) return [];
+
+    if (property == 'compound') {
+      return results.where((result) {
+        if (result is SlotResult) {
+          String place = result.place.isEmpty ? '未設定' : result.place;
+          String machine = result.machine.isEmpty ? '未設定' : result.machine;
+          String compoundKey = '$place × $machine';
+          return compoundKey == value;
+        }
+        return false;
+      }).toList();
+    }
 
     List<MahjongGroup> mahjongGroups = [];
     List<PachinkoGroup> pachinkoGroups = [];
@@ -338,7 +385,7 @@ class GroupingHelper {
       case 'pachinko':
         return ['type', 'member', 'group', 'place', 'machine', 'date'];
       case 'slot':
-        return ['member', 'group', 'place', 'machine', 'expectedSetting', 'date'];
+        return ['member', 'group', 'place', 'machine', 'compound', 'expectedSetting', 'date'];
       default:
         return [];
     }
@@ -358,6 +405,8 @@ class GroupingHelper {
         return '個人';
       case 'group':
         return 'グループ';
+      case 'compound':
+        return '複合';
       case 'betType':
         return '賭け方';
       case 'place':

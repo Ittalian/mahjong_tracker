@@ -28,6 +28,9 @@ class _SlotEditScreenState extends BaseEditScreenState<SlotEditScreen> {
 
   String _machineValue = '';
   int _expectedSetting = 0;
+  late TextEditingController _totalGamesController;
+  late TextEditingController _rbCountController;
+  late TextEditingController _bbCountController;
   final List<TextEditingController> _memberControllers = [];
 
   String? _addMode;
@@ -47,6 +50,9 @@ class _SlotEditScreenState extends BaseEditScreenState<SlotEditScreen> {
       final res = widget.result as SlotResult;
       _machineValue = res.machine;
       _expectedSetting = res.expectedSetting;
+      _totalGamesController = TextEditingController(text: res.totalGames > 0 ? res.totalGames.toString() : '');
+      _rbCountController = TextEditingController(text: res.rbCount > 0 ? res.rbCount.toString() : '');
+      _bbCountController = TextEditingController(text: res.bbCount > 0 ? res.bbCount.toString() : '');
       _initMemberControllers(res.member);
       if (res.member.isNotEmpty) {
         _addMode = 'individual';
@@ -57,6 +63,9 @@ class _SlotEditScreenState extends BaseEditScreenState<SlotEditScreen> {
     } else {
       _machineValue = '';
       _expectedSetting = 0;
+      _totalGamesController = TextEditingController();
+      _rbCountController = TextEditingController();
+      _bbCountController = TextEditingController();
     }
   }
 
@@ -95,6 +104,9 @@ class _SlotEditScreenState extends BaseEditScreenState<SlotEditScreen> {
     for (var controller in _memberControllers) {
       controller.dispose();
     }
+    _totalGamesController.dispose();
+    _rbCountController.dispose();
+    _bbCountController.dispose();
   }
 
   void _switchToIndividual() {
@@ -432,6 +444,34 @@ class _SlotEditScreenState extends BaseEditScreenState<SlotEditScreen> {
           onChanged: (v) => setState(() => _expectedSetting = v ?? 0),
         ),
         const SizedBox(height: 16),
+        Row(
+          children: [
+            Expanded(
+              child: TextFormField(
+                controller: _totalGamesController,
+                decoration: const InputDecoration(labelText: '合計G数', hintText: '例: 3000'),
+                keyboardType: TextInputType.number,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: TextFormField(
+                controller: _rbCountController,
+                decoration: const InputDecoration(labelText: 'RB回数', hintText: '例: 10'),
+                keyboardType: TextInputType.number,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: TextFormField(
+                controller: _bbCountController,
+                decoration: const InputDecoration(labelText: 'BB回数', hintText: '例: 15'),
+                keyboardType: TextInputType.number,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
         _buildMemberSection(),
       ],
     );
@@ -459,6 +499,9 @@ class _SlotEditScreenState extends BaseEditScreenState<SlotEditScreen> {
           machine: _machineValue,
           expectedSetting: _expectedSetting,
           member: memberList,
+          totalGames: int.tryParse(_totalGamesController.text) ?? 0,
+          rbCount: int.tryParse(_rbCountController.text) ?? 0,
+          bbCount: int.tryParse(_bbCountController.text) ?? 0,
         );
 
         if (widget.result == null) {

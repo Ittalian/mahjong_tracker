@@ -33,6 +33,12 @@ class ResultCard extends StatelessWidget {
     String? place;
     String? typeOrMachine;
     String? expectedSettingLabel; // スロット専用
+    String? gamesStr;
+    String? rbStr;
+    String? bbStr;
+    String? rbProbStr;
+    String? bbProbStr;
+    String? probStr;
 
     if (result is MahjongResult) {
       place = result.place;
@@ -46,6 +52,23 @@ class ResultCard extends StatelessWidget {
       final setting = result.expectedSetting as int;
       if (setting > 0) {
         expectedSettingLabel = '設定$setting';
+      }
+      
+      final res = result as SlotResult;
+      if (res.totalGames > 0 || res.rbCount > 0 || res.bbCount > 0) {
+        gamesStr = res.totalGames > 0 ? '${res.totalGames}' : '-';
+        rbStr = res.rbCount > 0 ? '${res.rbCount}' : '-';
+        bbStr = res.bbCount > 0 ? '${res.bbCount}' : '-';
+        rbProbStr = '-';
+        bbProbStr = '-';
+        probStr = '-';
+        if (res.totalGames > 0) {
+          if (res.rbCount > 0) rbProbStr = '1/${(res.totalGames / res.rbCount).toStringAsFixed(1)}';
+          if (res.bbCount > 0) bbProbStr = '1/${(res.totalGames / res.bbCount).toStringAsFixed(1)}';
+          if ((res.rbCount + res.bbCount) > 0) {
+            probStr = '1/${(res.totalGames / (res.rbCount + res.bbCount)).toStringAsFixed(1)}';
+          }
+        }
       }
     } else if (result is HorseRacingResult) {
       betType = result.betType;
@@ -106,6 +129,28 @@ class ResultCard extends StatelessWidget {
                           if (betType != null && betType.isNotEmpty)
                             _buildBadge(
                                 context, Icons.confirmation_number, betType),
+                        ],
+                      ),
+                    ],
+                    if (gamesStr != null) ...[
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8.0,
+                        runSpacing: 4.0,
+                        children: [
+                          _buildStatBadge(context, 'G数', gamesStr, Colors.grey.shade700),
+                          _buildStatBadge(context, 'RB', rbStr!, Colors.blue.shade700),
+                          _buildStatBadge(context, 'BB', bbStr!, Colors.red.shade700),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Wrap(
+                        spacing: 8.0,
+                        runSpacing: 4.0,
+                        children: [
+                          _buildStatBadge(context, 'RB確率', rbProbStr!, Colors.blue.shade700),
+                          _buildStatBadge(context, 'BB確率', bbProbStr!, Colors.red.shade700),
+                          _buildStatBadge(context, 'ペカリ確率', probStr!, Colors.orange.shade700),
                         ],
                       ),
                     ],
@@ -184,6 +229,25 @@ class ResultCard extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatBadge(BuildContext context, String label, String value, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(6.0),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label, style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.bold)),
+          const SizedBox(width: 4),
+          Text(value, style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.bold)),
         ],
       ),
     );

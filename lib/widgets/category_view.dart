@@ -359,6 +359,25 @@ class _CategoryViewState extends State<CategoryView> {
     );
   }
 
+  Widget _buildStatBadge(BuildContext context, String label, String value, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6.0, vertical: 2.0),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(6.0),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label, style: TextStyle(fontSize: 10, color: color, fontWeight: FontWeight.bold)),
+          const SizedBox(width: 4),
+          Text(value, style: TextStyle(fontSize: 12, color: color, fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+
   Widget _buildDetailedList(List<dynamic> results, NumberFormat formatter) {
     return FutureBuilder<List<Map<String, dynamic>>>(
       future: GroupingHelper.aggregateResultsAsync(
@@ -376,11 +395,165 @@ class _CategoryViewState extends State<CategoryView> {
           return const Center(child: Text('データがありません'));
         }
 
+        if (_selectedGroupProperty == 'compound') {
+          // 店舗ごとにグルーピング
+          final Map<String, List<Map<String, dynamic>>> groupedByPlace = {};
+          for (var item in aggregated) {
+            final parts = (item['name'] as String).split(' × ');
+            final place = parts[0];
+            final machine = parts.length > 1 ? parts[1] : '';
+            
+            final Map<String, dynamic> itemWithMachine = Map<String, dynamic>.from(item);
+            itemWithMachine['machine'] = machine;
+            
+            if (!groupedByPlace.containsKey(place)) {
+              groupedByPlace[place] = [];
+            }
+            groupedByPlace[place]!.add(itemWithMachine);
+          }
+
+          return ListView.builder(
+            itemCount: groupedByPlace.length,
+            itemBuilder: (context, index) {
+              final place = groupedByPlace.keys.elementAt(index);
+              final machines = groupedByPlace[place]!;
+              
+              // 店舗全体の収支を計算
+              final placeTotalAmount = machines.fold<int>(0, (sum, m) => sum + (m['amount'] as int));
+
+              return Card(
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                elevation: 4,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                clipBehavior: Clip.antiAlias,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // 店舗のヘッダー部分
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.storefront, color: Theme.of(context).primaryColor),
+                              const SizedBox(width: 8),
+                              Text(place, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                          Text(
+                            '${placeTotalAmount >= 0 ? '+' : ''}${formatter.format(placeTotalAmount)}',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: placeTotalAmount >= 0 ? Colors.green : Colors.red,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // 機種ごとのリスト
+                    ListView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: machines.length,
+                      itemBuilder: (context, mIndex) {
+                        final mItem = machines[mIndex];
+                        final amount = mItem['amount'] as int;
+                        final machineName = mItem['machine'] as String;
+                        
+                        final int totalGames = mItem['totalGames'] ?? 0;
+                        final int rbCount = mItem['rbCount'] ?? 0;
+                        final int bbCount = mItem['bbCount'] ?? 0;
+                        
+                        String rbProb = '-';
+                        String bbProb = '-';
+                        String totalProb = '-';
+
+                        if (totalGames > 0) {
+                          if (rbCount > 0) rbProb = '1/${(totalGames / rbCount).toStringAsFixed(1)}';
+                          if (bbCount > 0) bbProb = '1/${(totalGames / bbCount).toStringAsFixed(1)}';
+                          if ((rbCount + bbCount) > 0) {
+                            totalProb = '1/${(totalGames / (rbCount + bbCount)).toStringAsFixed(1)}';
+                          }
+                        }
+
+                        return InkWell(
+                          onTap: () {
+                            setState(() {
+                              _selectedGroupValue = mItem['name'];
+                            });
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).cardColor,
+                              border: Border(
+                                bottom: BorderSide(
+                                  color: mIndex < machines.length - 1 ? Colors.grey.shade200 : Colors.transparent,
+                                ),
+                              ),
+                            ),
+                            padding: const EdgeInsets.all(16.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(child: Text(machineName, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16))),
+                                    Text(
+                                      '${amount >= 0 ? '+' : ''}${formatter.format(amount)}',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: amount >= 0 ? Colors.green : Colors.red,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                if (totalGames > 0 || rbCount > 0 || bbCount > 0) ...[
+                                  const SizedBox(height: 8),
+                                  Wrap(
+                                    spacing: 8.0,
+                                    runSpacing: 4.0,
+                                    children: [
+                                      _buildStatBadge(context, 'G数', '${totalGames > 0 ? totalGames : "-"}', Colors.grey.shade700),
+                                      _buildStatBadge(context, 'RB', '${rbCount > 0 ? rbCount : "-"}', Colors.blue.shade700),
+                                      _buildStatBadge(context, 'BB', '${bbCount > 0 ? bbCount : "-"}', Colors.red.shade700),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Wrap(
+                                    spacing: 8.0,
+                                    runSpacing: 4.0,
+                                    children: [
+                                      _buildStatBadge(context, 'RB確率', rbProb, Colors.blue.shade700),
+                                      _buildStatBadge(context, 'BB確率', bbProb, Colors.red.shade700),
+                                      _buildStatBadge(context, 'ペカリ確率', totalProb, Colors.orange.shade700),
+                                    ],
+                                  ),
+                                ]
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              );
+            },
+          );
+        }
+
         return ListView.builder(
           itemCount: aggregated.length,
           itemBuilder: (context, index) {
             final item = aggregated[index];
             final amount = item['amount'] as int;
+
             return InkWell(
               onTap: () {
                 setState(() {

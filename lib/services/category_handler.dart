@@ -16,6 +16,9 @@ typedef CreateResultFunction = dynamic Function({
   List<String>? member,
   String? place,
   String? machine,
+  int? totalGames,
+  int? rbCount,
+  int? bbCount,
 });
 
 class CategoryHandler {
