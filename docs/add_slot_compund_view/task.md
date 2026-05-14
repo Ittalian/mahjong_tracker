@@ -1,0 +1,7 @@
+- `[x]` 1. `models/slot_result.dart` の修正
+- `[x]` 2. `services/category_handler.dart` の修正
+- `[x]` 3. `screens/edit_screen.dart` の修正
+- `[x]` 4. `widgets/result_card.dart` の修正
+- `[x]` 5. `utils/grouping_helper.dart` の修正
+- `[x]` 6. `widgets/category_view.dart` の修正
+- `[x]` 7. 動作検証・静的解析エラーの修正
