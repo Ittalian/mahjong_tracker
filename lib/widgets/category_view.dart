@@ -464,19 +464,20 @@ class _CategoryViewState extends State<CategoryView> {
                         final amount = mItem['amount'] as int;
                         final machineName = mItem['machine'] as String;
                         
-                        final int totalGames = mItem['totalGames'] ?? 0;
-                        final int rbCount = mItem['rbCount'] ?? 0;
-                        final int bbCount = mItem['bbCount'] ?? 0;
+                        final int? totalGames = mItem['totalGames'];
+                        final int? rbCount = mItem['rbCount'];
+                        final int? bbCount = mItem['bbCount'];
                         
                         String rbProb = '-';
                         String bbProb = '-';
                         String totalProb = '-';
 
-                        if (totalGames > 0) {
-                          if (rbCount > 0) rbProb = '1/${(totalGames / rbCount).toStringAsFixed(1)}';
-                          if (bbCount > 0) bbProb = '1/${(totalGames / bbCount).toStringAsFixed(1)}';
-                          if ((rbCount + bbCount) > 0) {
-                            totalProb = '1/${(totalGames / (rbCount + bbCount)).toStringAsFixed(1)}';
+                        if (totalGames != null && totalGames > 0) {
+                          if (rbCount != null && rbCount > 0) rbProb = '1/${(totalGames / rbCount).toStringAsFixed(1)}';
+                          if (bbCount != null && bbCount > 0) bbProb = '1/${(totalGames / bbCount).toStringAsFixed(1)}';
+                          final totalBonus = (rbCount ?? 0) + (bbCount ?? 0);
+                          if (totalBonus > 0) {
+                            totalProb = '1/${(totalGames / totalBonus).toStringAsFixed(1)}';
                           }
                         }
 
@@ -513,15 +514,15 @@ class _CategoryViewState extends State<CategoryView> {
                                     ),
                                   ],
                                 ),
-                                if (totalGames > 0 || rbCount > 0 || bbCount > 0) ...[
+                                if (totalGames != null || rbCount != null || bbCount != null) ...[
                                   const SizedBox(height: 8),
                                   Wrap(
                                     spacing: 8.0,
                                     runSpacing: 4.0,
                                     children: [
-                                      _buildStatBadge(context, 'G数', '${totalGames > 0 ? totalGames : "-"}', Colors.grey.shade700),
-                                      _buildStatBadge(context, 'RB', '${rbCount > 0 ? rbCount : "-"}', Colors.blue.shade700),
-                                      _buildStatBadge(context, 'BB', '${bbCount > 0 ? bbCount : "-"}', Colors.red.shade700),
+                                      _buildStatBadge(context, 'G数', '${totalGames ?? "-"}', Colors.grey.shade700),
+                                      _buildStatBadge(context, 'RB', '${rbCount ?? "-"}', Colors.blue.shade700),
+                                      _buildStatBadge(context, 'BB', '${bbCount ?? "-"}', Colors.red.shade700),
                                     ],
                                   ),
                                   const SizedBox(height: 4),

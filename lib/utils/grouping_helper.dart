@@ -84,15 +84,18 @@ class GroupingHelper {
           String compoundKey = '$place × $machine';
 
           if (!groupsMap.containsKey(compoundKey)) {
-            groupsMap[compoundKey] = {'amount': 0, 'totalGames': 0, 'rbCount': 0, 'bbCount': 0};
+            groupsMap[compoundKey] = {'amount': 0, 'totalGames': null, 'rbCount': null, 'bbCount': null};
           }
           groupsMap[compoundKey]!['amount'] = (groupsMap[compoundKey]!['amount'] as int) + result.amount;
           
-          // 未入力（全て0）のデータは計算から除外するため、いずれかが0より大きい場合のみ加算する
-          if (result.totalGames > 0 || result.rbCount > 0 || result.bbCount > 0) {
-            groupsMap[compoundKey]!['totalGames'] = (groupsMap[compoundKey]!['totalGames'] as int) + result.totalGames;
-            groupsMap[compoundKey]!['rbCount'] = (groupsMap[compoundKey]!['rbCount'] as int) + result.rbCount;
-            groupsMap[compoundKey]!['bbCount'] = (groupsMap[compoundKey]!['bbCount'] as int) + result.bbCount;
+          if (result.totalGames != null) {
+            groupsMap[compoundKey]!['totalGames'] = (groupsMap[compoundKey]!['totalGames'] as int? ?? 0) + result.totalGames!;
+          }
+          if (result.rbCount != null) {
+            groupsMap[compoundKey]!['rbCount'] = (groupsMap[compoundKey]!['rbCount'] as int? ?? 0) + result.rbCount!;
+          }
+          if (result.bbCount != null) {
+            groupsMap[compoundKey]!['bbCount'] = (groupsMap[compoundKey]!['bbCount'] as int? ?? 0) + result.bbCount!;
           }
         }
       }

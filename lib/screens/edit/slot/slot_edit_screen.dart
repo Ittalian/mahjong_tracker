@@ -50,9 +50,9 @@ class _SlotEditScreenState extends BaseEditScreenState<SlotEditScreen> {
       final res = widget.result as SlotResult;
       _machineValue = res.machine;
       _expectedSetting = res.expectedSetting;
-      _totalGamesController = TextEditingController(text: res.totalGames > 0 ? res.totalGames.toString() : '');
-      _rbCountController = TextEditingController(text: res.rbCount > 0 ? res.rbCount.toString() : '');
-      _bbCountController = TextEditingController(text: res.bbCount > 0 ? res.bbCount.toString() : '');
+      _totalGamesController = TextEditingController(text: res.totalGames != null ? res.totalGames.toString() : '');
+      _rbCountController = TextEditingController(text: res.rbCount != null ? res.rbCount.toString() : '');
+      _bbCountController = TextEditingController(text: res.bbCount != null ? res.bbCount.toString() : '');
       _initMemberControllers(res.member);
       if (res.member.isNotEmpty) {
         _addMode = 'individual';
@@ -499,9 +499,9 @@ class _SlotEditScreenState extends BaseEditScreenState<SlotEditScreen> {
           machine: _machineValue,
           expectedSetting: _expectedSetting,
           member: memberList,
-          totalGames: int.tryParse(_totalGamesController.text) ?? 0,
-          rbCount: int.tryParse(_rbCountController.text) ?? 0,
-          bbCount: int.tryParse(_bbCountController.text) ?? 0,
+          totalGames: int.tryParse(_totalGamesController.text),
+          rbCount: int.tryParse(_rbCountController.text),
+          bbCount: int.tryParse(_bbCountController.text),
         );
 
         if (widget.result == null) {

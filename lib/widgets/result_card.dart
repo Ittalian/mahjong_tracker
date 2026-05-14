@@ -55,18 +55,23 @@ class ResultCard extends StatelessWidget {
       }
       
       final res = result as SlotResult;
-      if (res.totalGames > 0 || res.rbCount > 0 || res.bbCount > 0) {
-        gamesStr = res.totalGames > 0 ? '${res.totalGames}' : '-';
-        rbStr = res.rbCount > 0 ? '${res.rbCount}' : '-';
-        bbStr = res.bbCount > 0 ? '${res.bbCount}' : '-';
+      if (res.totalGames != null || res.rbCount != null || res.bbCount != null) {
+        gamesStr = res.totalGames?.toString() ?? '-';
+        rbStr = res.rbCount?.toString() ?? '-';
+        bbStr = res.bbCount?.toString() ?? '-';
         rbProbStr = '-';
         bbProbStr = '-';
         probStr = '-';
-        if (res.totalGames > 0) {
-          if (res.rbCount > 0) rbProbStr = '1/${(res.totalGames / res.rbCount).toStringAsFixed(1)}';
-          if (res.bbCount > 0) bbProbStr = '1/${(res.totalGames / res.bbCount).toStringAsFixed(1)}';
-          if ((res.rbCount + res.bbCount) > 0) {
-            probStr = '1/${(res.totalGames / (res.rbCount + res.bbCount)).toStringAsFixed(1)}';
+        if (res.totalGames != null && res.totalGames! > 0) {
+          if (res.rbCount != null && res.rbCount! > 0) {
+            rbProbStr = '1/${(res.totalGames! / res.rbCount!).toStringAsFixed(1)}';
+          }
+          if (res.bbCount != null && res.bbCount! > 0) {
+            bbProbStr = '1/${(res.totalGames! / res.bbCount!).toStringAsFixed(1)}';
+          }
+          final totalBonus = (res.rbCount ?? 0) + (res.bbCount ?? 0);
+          if (totalBonus > 0) {
+            probStr = '1/${(res.totalGames! / totalBonus).toStringAsFixed(1)}';
           }
         }
       }
