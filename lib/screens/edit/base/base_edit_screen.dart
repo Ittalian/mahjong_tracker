@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:mahjong_tracker/models/place.dart';
 import 'package:mahjong_tracker/services/place_service.dart';
 import 'package:mahjong_tracker/widgets/creatable_autocomplete.dart';
+import 'package:mahjong_tracker/utils/date_helper.dart';
 
 /// 全ての編集画面で共有される機能を提供する抽象ベースクラス
 abstract class BaseEditScreen extends StatefulWidget {
@@ -80,7 +80,7 @@ abstract class BaseEditScreenState<T extends BaseEditScreen> extends State<T> {
   Widget buildDateSelector() {
     return ListTile(
       title: Text(
-        '日付: ${DateFormat('yyyy/MM/dd').format(selectedDate)}',
+        '日付: ${DateHelper.formatDateWithWeekday(selectedDate)}',
       ),
       trailing: const Icon(Icons.calendar_today),
       onTap: () => selectDate(context),
@@ -121,40 +121,49 @@ abstract class BaseEditScreenState<T extends BaseEditScreen> extends State<T> {
   /// 共通の場所入力フィールドを構築
   Widget buildPlaceField() {
     return StreamBuilder<List<Place>>(
-      stream: placeService.getPlaces(categoryType),
-      builder: (context, snapshot) {
-        final places = snapshot.data ?? [];
-        return CreatableAutocomplete<Place>(
-          options: places,
-          displayStringForOption: (p) => p.name,
-          labelText: '場所',
-          initialValue: placeValue,
-          onChanged: (v) => placeValue = v,
-          onCreate: (name) async {
-            await placeService.addPlace(Place(name: name, category: categoryType, createdAt: DateTime.now()));
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('保存しました')));
-            }
-          },
-          onEdit: (place, newName) async {
-            final oldName = place.name;
-            await placeService.updatePlace(Place(id: place.id, name: newName, category: categoryType, createdAt: place.createdAt));
-            if (oldName != newName) {
-              await updatePlaceNameInResults(oldName, newName);
-            }
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('保存しました')));
-            }
-          },
-          onDelete: (place) async {
-            await placeService.deletePlace(place.id!);
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('削除しました')));
-            }
-          },
-        );
-      }
-    );
+        stream: placeService.getPlaces(categoryType),
+        builder: (context, snapshot) {
+          final places = snapshot.data ?? [];
+          return CreatableAutocomplete<Place>(
+            options: places,
+            displayStringForOption: (p) => p.name,
+            labelText: '場所',
+            initialValue: placeValue,
+            onChanged: (v) => placeValue = v,
+            onCreate: (name) async {
+              await placeService.addPlace(Place(
+                  name: name,
+                  category: categoryType,
+                  createdAt: DateTime.now()));
+              if (context.mounted) {
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(const SnackBar(content: Text('保存しました')));
+              }
+            },
+            onEdit: (place, newName) async {
+              final oldName = place.name;
+              await placeService.updatePlace(Place(
+                  id: place.id,
+                  name: newName,
+                  category: categoryType,
+                  createdAt: place.createdAt));
+              if (oldName != newName) {
+                await updatePlaceNameInResults(oldName, newName);
+              }
+              if (context.mounted) {
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(const SnackBar(content: Text('保存しました')));
+              }
+            },
+            onDelete: (place) async {
+              await placeService.deletePlace(place.id!);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(const SnackBar(content: Text('削除しました')));
+              }
+            },
+          );
+        });
   }
 
   /// 共通のメンバー入力UIを構築

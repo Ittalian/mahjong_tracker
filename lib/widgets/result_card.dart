@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../models/mahjong_result.dart';
-import '../models/pachinko_result.dart';
-import '../models/slot_result.dart';
-import '../models/horse_racing_result.dart';
-import '../models/boat_racing_result.dart';
-import '../models/auto_racing_result.dart';
-import '../models/keirin_result.dart';
+import 'package:mahjong_tracker/models/mahjong_result.dart';
+import 'package:mahjong_tracker/models/pachinko_result.dart';
+import 'package:mahjong_tracker/models/slot_result.dart';
+import 'package:mahjong_tracker/models/horse_racing_result.dart';
+import 'package:mahjong_tracker/models/boat_racing_result.dart';
+import 'package:mahjong_tracker/models/auto_racing_result.dart';
+import 'package:mahjong_tracker/models/keirin_result.dart';
+import 'package:mahjong_tracker/utils/date_helper.dart';
 
 class ResultCard extends StatelessWidget {
   final dynamic result;
@@ -23,7 +24,7 @@ class ResultCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final currencyFormatter = NumberFormat("#,##0", "ja_JP");
-    final formattedDate = DateFormat('yyyy/MM/dd').format(result.date);
+    final formattedDate = DateHelper.formatDateWithWeekday(result.date);
     final isPositive = result.amount >= 0;
     final amountColor = isPositive ? Colors.green : Colors.red;
     final amountText =

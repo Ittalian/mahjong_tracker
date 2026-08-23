@@ -9,6 +9,7 @@ import 'package:mahjong_tracker/models/mahjong_group.dart';
 import 'package:mahjong_tracker/models/pachinko_group.dart';
 import 'package:mahjong_tracker/services/mahjong/mahjong_group_service.dart';
 import 'package:mahjong_tracker/services/pachinko/pachinko_group_service.dart';
+import 'package:mahjong_tracker/utils/date_helper.dart';
 import 'package:intl/intl.dart';
 
 class GroupingHelper {
@@ -44,6 +45,9 @@ class GroupingHelper {
       } else if (property == 'date') {
         String key = _getDateKey(result.date as DateTime, dateUnit);
         groups[key] = (groups[key] ?? 0) + (result.amount as int);
+      } else if (property == 'weekday') {
+        String key = DateHelper.getWeekdayFull(result.date as DateTime);
+        groups[key] = (groups[key] ?? 0) + (result.amount as int);
       } else {
         String key = getPropertyValue(result, categoryType, property);
         groups[key] = (groups[key] ?? 0) + (result.amount as int);
@@ -54,10 +58,13 @@ class GroupingHelper {
       return {'name': e.key, 'amount': e.value};
     }).toList();
 
-    // Sort by amount descending (optional, but usually nice)
+    // 並べ替え（日付は降順、曜日は月曜〜日曜順、その他は金額降順）
     if (property == 'date') {
       aggregated.sort(
           (a, b) => (b['name'] as String).compareTo(a['name'] as String));
+    } else if (property == 'weekday') {
+      aggregated.sort((a, b) => DateHelper.getWeekdayIndex(a['name'] as String)
+          .compareTo(DateHelper.getWeekdayIndex(b['name'] as String)));
     } else {
       aggregated
           .sort((a, b) => (b['amount'] as int).compareTo(a['amount'] as int));
@@ -202,6 +209,8 @@ class GroupingHelper {
         }
       } else if (property == 'date') {
         return _getDateKey(result.date as DateTime, dateUnit) == value;
+      } else if (property == 'weekday') {
+        return DateHelper.getWeekdayFull(result.date as DateTime) == value;
       } else {
         return getPropertyValue(result, categoryType, property) == value;
       }
@@ -291,6 +300,9 @@ class GroupingHelper {
 
   static String getPropertyValue(
       dynamic result, String categoryType, String property) {
+    if (property == 'weekday') {
+      return DateHelper.getWeekdayFull(result.date as DateTime);
+    }
     switch (categoryType) {
       case 'mahjong':
         if (result is MahjongResult) {
@@ -379,16 +391,16 @@ class GroupingHelper {
   static List<String> getGroupableProperties(String categoryType) {
     switch (categoryType) {
       case 'mahjong':
-        return ['type', 'umaRate', 'priceRate', 'chipRate', 'member', 'group', 'place', 'date'];
+        return ['type', 'umaRate', 'priceRate', 'chipRate', 'member', 'group', 'place', 'date', 'weekday'];
       case 'horse_racing':
       case 'boat_racing':
       case 'auto_racing':
       case 'keirin':
-        return ['betType', 'place', 'date'];
+        return ['betType', 'place', 'date', 'weekday'];
       case 'pachinko':
-        return ['type', 'member', 'group', 'place', 'machine', 'date'];
+        return ['type', 'member', 'group', 'place', 'machine', 'date', 'weekday'];
       case 'slot':
-        return ['member', 'group', 'place', 'machine', 'compound', 'expectedSetting', 'date'];
+        return ['member', 'group', 'place', 'machine', 'compound', 'expectedSetting', 'date', 'weekday'];
       default:
         return [];
     }
@@ -420,6 +432,8 @@ class GroupingHelper {
         return '予想設定';
       case 'date':
         return '日付';
+      case 'weekday':
+        return '曜日';
       default:
         return property;
     }
