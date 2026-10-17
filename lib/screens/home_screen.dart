@@ -16,6 +16,8 @@ import 'package:mahjong_tracker/screens/review/review_horse_racing_tab.dart';
 import 'package:mahjong_tracker/screens/review/review_racer_tab.dart';
 import 'package:mahjong_tracker/screens/edit/majong/mahjong_group_edit_screen.dart';
 import 'package:mahjong_tracker/screens/edit/pachinko/pachinko_group_edit_screen.dart';
+import 'package:mahjong_tracker/screens/race_draft_screen.dart';
+import 'package:mahjong_tracker/screens/race_result_detail_screen.dart';
 import 'summary_screen.dart';
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -162,6 +164,17 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     final currentCategory = _categories[_currentIndex];
+    final type = currentCategory['type'] as String;
+    if (result != null && _raceTypes.contains(type)) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              RaceResultDetailScreen(category: type, result: result),
+        ),
+      );
+      return;
+    }
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -171,6 +184,28 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+  }
+
+  static const _raceTypes = [
+    'horse_racing',
+    'boat_racing',
+    'auto_racing',
+    'keirin',
+  ];
+
+  /// レース系は収支計算画面、それ以外は通常の編集画面へ遷移する
+  void _onAddPressed(BuildContext context) {
+    final type = _categories[_currentIndex]['type'] as String;
+    if (_raceTypes.contains(type)) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => RaceDraftScreen(category: type),
+        ),
+      );
+    } else {
+      _navigateToEditScreen(context);
+    }
   }
 
   Future<void> _confirmDelete(BuildContext context, dynamic result) async {
@@ -322,7 +357,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
                 FloatingActionButton(
                   heroTag: 'fab_add',
-                  onPressed: () => _navigateToEditScreen(context),
+                  onPressed: () => _onAddPressed(context),
                   tooltip: '収支を追加',
                   child: const Icon(Icons.add),
                 ),

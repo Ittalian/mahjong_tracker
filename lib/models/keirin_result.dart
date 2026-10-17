@@ -20,6 +20,9 @@ class KeirinResult {
   final DateTime createdAt;
   final String place;
 
+  /// 1日の中の各レースの内訳 (betType, amount, place, raceName, memo)
+  final List<Map<String, dynamic>> bets;
+
   KeirinResult({
     this.id,
     required this.date,
@@ -28,6 +31,7 @@ class KeirinResult {
     required this.memo,
     required this.createdAt,
     this.place = '',
+    this.bets = const [],
   });
 
   factory KeirinResult.fromFirestore(DocumentSnapshot doc) {
@@ -40,6 +44,10 @@ class KeirinResult {
       memo: data['memo'] ?? '',
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       place: data['place'] ?? '',
+      bets: List<Map<String, dynamic>>.from(
+        (data['bets'] as List<dynamic>? ?? [])
+            .map((e) => Map<String, dynamic>.from(e as Map)),
+      ),
     );
   }
 
@@ -51,6 +59,7 @@ class KeirinResult {
       'memo': memo,
       'createdAt': Timestamp.fromDate(createdAt),
       'place': place,
+      'bets': bets,
     };
   }
 }

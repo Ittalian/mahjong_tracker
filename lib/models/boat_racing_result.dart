@@ -18,6 +18,9 @@ class BoatRacingResult {
   final DateTime createdAt;
   final String place;
 
+  /// 1日の中の各レースの内訳 (betType, amount, place, raceName, memo)
+  final List<Map<String, dynamic>> bets;
+
   BoatRacingResult({
     this.id,
     required this.date,
@@ -26,6 +29,7 @@ class BoatRacingResult {
     required this.memo,
     required this.createdAt,
     this.place = '',
+    this.bets = const [],
   });
 
   factory BoatRacingResult.fromFirestore(DocumentSnapshot doc) {
@@ -38,6 +42,10 @@ class BoatRacingResult {
       memo: data['memo'] ?? '',
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       place: data['place'] ?? '',
+      bets: List<Map<String, dynamic>>.from(
+        (data['bets'] as List<dynamic>? ?? [])
+            .map((e) => Map<String, dynamic>.from(e as Map)),
+      ),
     );
   }
 
@@ -49,6 +57,7 @@ class BoatRacingResult {
       'memo': memo,
       'createdAt': Timestamp.fromDate(createdAt),
       'place': place,
+      'bets': bets,
     };
   }
 }

@@ -19,6 +19,9 @@ class AutoRacingResult {
   final DateTime createdAt;
   final String place;
 
+  /// 1日の中の各レースの内訳 (betType, amount, place, raceName, memo)
+  final List<Map<String, dynamic>> bets;
+
   AutoRacingResult({
     this.id,
     required this.date,
@@ -27,6 +30,7 @@ class AutoRacingResult {
     required this.memo,
     required this.createdAt,
     this.place = '',
+    this.bets = const [],
   });
 
   factory AutoRacingResult.fromFirestore(DocumentSnapshot doc) {
@@ -39,6 +43,10 @@ class AutoRacingResult {
       memo: data['memo'] ?? '',
       createdAt: (data['createdAt'] as Timestamp).toDate(),
       place: data['place'] ?? '',
+      bets: List<Map<String, dynamic>>.from(
+        (data['bets'] as List<dynamic>? ?? [])
+            .map((e) => Map<String, dynamic>.from(e as Map)),
+      ),
     );
   }
 
@@ -50,6 +58,7 @@ class AutoRacingResult {
       'memo': memo,
       'createdAt': Timestamp.fromDate(createdAt),
       'place': place,
+      'bets': bets,
     };
   }
 }

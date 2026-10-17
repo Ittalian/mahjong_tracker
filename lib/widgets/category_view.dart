@@ -332,7 +332,8 @@ class _CategoryViewState extends State<CategoryView> {
                               return DropdownMenuItem<String>(
                                 value: value,
                                 child:
-                                    Text(GroupingHelper.getPropertyLabel(value)),
+                                    Text(GroupingHelper.getPropertyLabel(
+                                        value, widget.category['type'])),
                               );
                             }).toList(),
                           ),
@@ -436,7 +437,8 @@ class _CategoryViewState extends State<CategoryView> {
                               return DropdownMenuItem<String>(
                                 value: value,
                                 child:
-                                    Text(GroupingHelper.getPropertyLabel(value)),
+                                    Text(GroupingHelper.getPropertyLabel(
+                                        value, widget.category['type'])),
                               );
                             }).toList(),
                           ),
@@ -873,7 +875,8 @@ class _CategoryViewState extends State<CategoryView> {
                     property: groupProperty,
                     value: item['name'],
                     propertyLabel:
-                        GroupingHelper.getPropertyLabel(groupProperty),
+                        GroupingHelper.getPropertyLabel(
+                            groupProperty, widget.category['type']),
                     dateUnit: _selectedDateUnit,
                   ));
                   if (isTopLevel) {
@@ -978,7 +981,7 @@ class _CategoryViewState extends State<CategoryView> {
           MaterialPageRoute(
             builder: (context) => ChartScreen(
               title:
-                  '${widget.category['display_name']} - ${GroupingHelper.getPropertyLabel(groupProp)}',
+                  '${widget.category['display_name']} - ${GroupingHelper.getPropertyLabel(groupProp, widget.category['type'])}',
               data: aggregated,
             ),
           ),
@@ -1100,7 +1103,8 @@ class _FilterBottomSheetState extends State<_FilterBottomSheet> {
               final prop = entry.key;
               final controller = entry.value;
               final label =
-                  prop == 'memo' ? 'メモ' : GroupingHelper.getPropertyLabel(prop);
+                  prop == 'memo' ? 'メモ' : GroupingHelper.getPropertyLabel(
+                      prop, widget.category['type']);
               return Padding(
                 padding: const EdgeInsets.only(bottom: 12.0),
                 child: TextField(

@@ -48,6 +48,11 @@ class GroupingHelper {
       } else if (property == 'weekday') {
         String key = DateHelper.getWeekdayFull(result.date as DateTime);
         groups[key] = (groups[key] ?? 0) + (result.amount as int);
+      } else if (property == 'betType' && _isRaceCategory(categoryType)) {
+        for (final bet in getBetEntries(result)) {
+          final key = bet['betType'] as String;
+          groups[key] = (groups[key] ?? 0) + (bet['amount'] as int);
+        }
       } else {
         String key = getPropertyValue(result, categoryType, property);
         groups[key] = (groups[key] ?? 0) + (result.amount as int);
@@ -211,6 +216,8 @@ class GroupingHelper {
         return _getDateKey(result.date as DateTime, dateUnit) == value;
       } else if (property == 'weekday') {
         return DateHelper.getWeekdayFull(result.date as DateTime) == value;
+      } else if (property == 'betType' && _isRaceCategory(categoryType)) {
+        return getBetEntries(result).any((b) => b['betType'] == value);
       } else {
         return getPropertyValue(result, categoryType, property) == value;
       }
@@ -284,6 +291,28 @@ class GroupingHelper {
     }).toList();
   }
 
+  static bool _isRaceCategory(String categoryType) =>
+      categoryType == 'horse_racing' ||
+      categoryType == 'boat_racing' ||
+      categoryType == 'auto_racing' ||
+      categoryType == 'keirin';
+
+  /// レース結果の賭け方別内訳を返す。内訳がない旧データは betType と合計金額で代用する。
+  static List<Map<String, dynamic>> getBetEntries(dynamic result) {
+    final List<Map<String, dynamic>> bets = result.bets as List<Map<String, dynamic>>;
+    if (bets.isNotEmpty) {
+      return bets
+          .map((b) => {
+                'betType': (b['betType'] as String?) ?? 'その他',
+                'amount': (b['amount'] as num?)?.toInt() ?? 0,
+              })
+          .toList();
+    }
+    return [
+      {'betType': result.betType as String, 'amount': result.amount as int},
+    ];
+  }
+
   static String _getDateKey(DateTime date, String dateUnit) {
     if (dateUnit == 'year') {
       return DateFormat('yyyy').format(date);
@@ -324,7 +353,12 @@ class GroupingHelper {
         break;
       case 'horse_racing':
         if (result is HorseRacingResult) {
-          if (property == 'betType') return result.betType;
+          if (property == 'betType') {
+            return getBetEntries(result)
+                .map((b) => b['betType'] as String)
+                .toSet()
+                .join(',');
+          }
           if (property == 'place') {
             return result.place.isEmpty ? '未設定' : result.place;
           }
@@ -332,7 +366,12 @@ class GroupingHelper {
         break;
       case 'boat_racing':
         if (result is BoatRacingResult) {
-          if (property == 'betType') return result.betType;
+          if (property == 'betType') {
+            return getBetEntries(result)
+                .map((b) => b['betType'] as String)
+                .toSet()
+                .join(',');
+          }
           if (property == 'place') {
             return result.place.isEmpty ? '未設定' : result.place;
           }
@@ -340,7 +379,12 @@ class GroupingHelper {
         break;
       case 'auto_racing':
         if (result is AutoRacingResult) {
-          if (property == 'betType') return result.betType;
+          if (property == 'betType') {
+            return getBetEntries(result)
+                .map((b) => b['betType'] as String)
+                .toSet()
+                .join(',');
+          }
           if (property == 'place') {
             return result.place.isEmpty ? '未設定' : result.place;
           }
@@ -348,7 +392,12 @@ class GroupingHelper {
         break;
       case 'keirin':
         if (result is KeirinResult) {
-          if (property == 'betType') return result.betType;
+          if (property == 'betType') {
+            return getBetEntries(result)
+                .map((b) => b['betType'] as String)
+                .toSet()
+                .join(',');
+          }
           if (property == 'place') {
             return result.place.isEmpty ? '未設定' : result.place;
           }
@@ -406,7 +455,7 @@ class GroupingHelper {
     }
   }
 
-  static String getPropertyLabel(String property) {
+  static String getPropertyLabel(String property, [String? categoryType]) {
     switch (property) {
       case 'type':
         return 'タイプ';
@@ -425,7 +474,9 @@ class GroupingHelper {
       case 'betType':
         return '賭け方';
       case 'place':
-        return '店舗';
+        return (categoryType == 'pachinko' || categoryType == 'slot')
+            ? '店舗'
+            : '場所';
       case 'machine':
         return '台の種類';
       case 'expectedSetting':
